@@ -84,7 +84,7 @@ export const createUser = async (userData) => {
   };
 
   // To hash the password
-  const hashedPassword = await bcrypt.hash(password, process.env.BCRYPT_HASH_ROUND);
+  const hashedPassword = await bcrypt.hash(password, 12);
 
   // To check whether the role inputed is valid
   const validRoles = ['Citizen', 'Organization', 'Institution'];
