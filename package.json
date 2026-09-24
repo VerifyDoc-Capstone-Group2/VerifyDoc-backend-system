@@ -1,0 +1,24 @@
+{
+  "name": "verifydoc-backend-system",
+  "version": "1.0.0",
+  "description": "The backend system for verify doc",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VerifyDoc-Capstone-Group2/VerifyDoc-backend-system.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/VerifyDoc-Capstone-Group2/VerifyDoc-backend-system/issues"
+  },
+  "homepage": "https://github.com/VerifyDoc-Capstone-Group2/VerifyDoc-backend-system#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
