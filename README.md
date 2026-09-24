@@ -113,10 +113,9 @@ Routes -> Middleware -> Controllers -> Services -> Models -> MongoDB
 ## Project Structure
 
 ```text
-src/
+VerifyDoc-backend-system
 ├── config/
 │   ├── db.js
-│   ├── env.js
 │   └── cloudinary.js
 │
 ├── models/
@@ -181,7 +180,6 @@ src/
 │   ├── hashOtp.js
 │   └── apiError.js
 │
-├── app.js
 └── server.js
 ```
 
@@ -208,14 +206,11 @@ Create a `.env` file in the project root.
 
 ```env
 PORT=5000
-NODE_ENV=development
 
 MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-url>/verifydoc_db
 
 JWT_SECRET=replace_with_a_long_secure_random_secret
 JWT_EXPIRES_IN=1d
-
-BCRYPT_SALT_ROUNDS=12
 
 # Optional: Cloudinary for document uploads
 CLOUDINARY_CLOUD_NAME=
@@ -249,7 +244,6 @@ http://localhost:5000
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "seed": "node src/seeds/seed.js",
-    "test": "jest"
   }
 }
 ```
