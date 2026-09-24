@@ -62,7 +62,7 @@ export const createUser = async (userData) => {
         throw new AppError('Invalid number for phone number', 400);
       }
     } else if (phoneNumber.startsWith('+234')) {
-      if (phoneNumber.trim().length !== 13) {
+      if (phoneNumber.trim().length !== 14) {
         throw new AppError('Invalid number for phone number', 400);
       }
     };
