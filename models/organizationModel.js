@@ -15,6 +15,13 @@ const organizationSchema = new mongoose.Schema({
     required: true
   },
 
+  organizationId: {
+    type: String,
+    trim: true,
+    required: true,
+    unique: true
+  },
+
   cacNumber: {
     type: String,
     trim: true,

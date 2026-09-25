@@ -1,11 +1,14 @@
+import mongoose from 'mongoose';
 import { AppError } from '../errors/AppError.js';
 import { Organization } from '../models/organizationModel.js';
 import { phoneNumberValidator } from '../utils/regularExpression.js';
+import { generateFourDigitNumber } from '../utils/randomNumberGenerator.js';
+import { createUser } from './userService.js';
 
 
 
 // For creating an organization
-export const createOrganization = async (organizationData) => {
+export const createOrganization = async (organizationData, dbSession) => {
   const {
     organizationName,
     organizationType,
@@ -114,17 +117,78 @@ export const createOrganization = async (organizationData) => {
     };
   }
 
+  // To automatically generate organization number
+  let prefix;
+  let organizationId;
 
-  const newOrganization = await Organization.create({
+  const match = organizationName.match(/[a-zA-Z]/g);
+
+  if (match && match.length >= 3) {
+    prefix = match.slice(0, 3).join('').toUpperCase();
+  } else {
+    throw new AppError('Organization name is invalid', 400);
+  }
+
+  organizationId = `VDOC-${prefix}-${generateFourDigitNumber()}`;
+
+  // Check if the organization ID that was generated exists
+  let existingOrganizationId = await Organization.findOne({organizationId});
+
+  // If there is an organization with that same ID, generate a new one
+  while (existingOrganizationId) {
+    organizationId = `VDOC-${prefix}-${generateFourDigitNumber()}`;
+
+    existingOrganizationId = await Organization.findOne({organizationId});
+  };
+
+
+  const newOrganization = await Organization.create([{
     organizationName,
     organizationType,
+    organizationId,
     cacNumber,
     cacCertificate,
     officialEmail,
     phoneNumber,
     address,
     website
-  });
+  }],
+  { session: dbSession }
+);
 
-  return newOrganization;
+  return newOrganization[0];
+};
+
+
+
+// For registering an organization with user
+export const registerOrganization = async (data) => {
+  // To avoid inconsistency when either one of the two action fail, We need to use MongoDB Transaction
+  const dbSession = await mongoose.startSession();
+
+  try {
+    await dbSession.startTransaction();
+
+    // Sends the organization information to createOrganization()
+    const organization = await createOrganization(data.organization, dbSession);
+
+    // Sends the user information to createUser()
+    const user = await createUser({
+      ...data.user,
+      organizationId: organization.organizationId
+    }, dbSession);
+
+    await dbSession.commitTransaction();
+
+    return {
+      organization,
+      user
+    };
+
+  } catch (error) {
+    await dbSession.abortTransaction();
+    throw error;
+  } finally {
+    await dbSession.endSession();
+  }
 };

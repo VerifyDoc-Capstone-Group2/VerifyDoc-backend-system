@@ -5,7 +5,7 @@ import { User } from "../models/userModel.js";
 import { AppError } from "../errors/AppError.js";
 
 
-export const createUser = async (userData) => {
+export const createUser = async (userData, dbSession) => {
   const {
     firstName,
     lastName,
@@ -112,40 +112,23 @@ export const createUser = async (userData) => {
   // If user role is an organization, make sure it has a valid object
   if (role === 'Organization') {
     if (
-      organizationId === undefined ||
-      typeof organizationId !== 'string' ||
-      organizationId.trim().length === 0 ||
-      !mongoose.isValidObjectId(organizationId)
+      organizationId === undefined
     ) {
       throw new AppError('Invalid organization ID', 400)
     }
-
-    // const existingOrganization = Organization.findById(organizationId);
-
-    // if (!existingOrganization) {
-    //   throw new AppError('Organization not found')
-    // }
   }
 
   // If user role is an institution, make sure it has a valid object
   if (role === 'Institution') {
     if (
       institutionId === undefined ||
-      typeof institutionId !== 'string' ||
-      institutionId.trim().length === 0 ||
       !mongoose.isValidObjectId(institutionId)
     ) {
       throw new AppError('Invalid institution ID', 400);
     };
-
-    // const existingInstitution = Institution.findById(institutionId);
-
-    // if (!existingInstitution) {
-    //   throw new AppError('Organization not found');
-    // };
   };
 
-  await User.create({
+  await User.create([{
     firstName,
     lastName,
     email,
@@ -155,7 +138,9 @@ export const createUser = async (userData) => {
     organizationId,
     institutionId,
     accountStatus
-  });
+  }],
+  { session: dbSession }
+);
 
   return {
     firstName,
