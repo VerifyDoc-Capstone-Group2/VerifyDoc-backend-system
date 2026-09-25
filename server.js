@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
-import userRoute from './routes/userRoute.js'
+import userRoute from './routes/userRoute.js';
+import organizationRoute from './routes/organizationRoute.js'
 import { connectDB } from './config/db.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
@@ -10,6 +11,7 @@ const port = process.env.PORT || 5000;
 app.use(express.json());
 
 app.use('/auth/register', userRoute);
+app.use('/auth/register-organization', organizationRoute);
 
 app.get('/', (req, res) => {
   res.status(200).send('Server is running');
