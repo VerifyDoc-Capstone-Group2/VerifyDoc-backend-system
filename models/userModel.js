@@ -46,16 +46,16 @@ const userSchema = new mongoose.Schema({
   },
 
   organizationId: {
-    type:  mongoose.Schema.Types.ObjectId,
-    ref: 'Organization',
+    type: String,
+    trim: true,
     required: function () {
       return this.role === 'Organization'
     }
   },
 
   institutionId: {
-    type:  mongoose.Schema.Types.ObjectId,
-    ref: 'Institution',
+    type: String,
+    trim: true,
     required: function () {
       return this.role === 'Institution'
     }
