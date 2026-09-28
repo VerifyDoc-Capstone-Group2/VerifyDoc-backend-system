@@ -129,14 +129,14 @@ export const createOrganization = async (organizationData, dbSession) => {
     throw new AppError('Organization name is invalid', 400);
   }
 
-  organizationId = `VDOC-${prefix}-${generateFourDigitNumber()}`;
+  organizationId = `VDOC-ORG-${prefix}-${generateFourDigitNumber()}`;
 
   // Check if the organization ID that was generated exists
   let existingOrganizationId = await Organization.findOne({organizationId});
 
   // If there is an organization with that same ID, generate a new one
   while (existingOrganizationId) {
-    organizationId = `VDOC-${prefix}-${generateFourDigitNumber()}`;
+    organizationId = `VDOC-ORG-${prefix}-${generateFourDigitNumber()}`;
 
     existingOrganizationId = await Organization.findOne({organizationId});
   };

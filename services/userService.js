@@ -109,20 +109,33 @@ export const createUser = async (userData, dbSession) => {
     accountStatus = 'Pending Approval'
   };
 
-  // If user role is an organization, make sure it has a valid object
+  // If user role is an organization
   if (role === 'Organization') {
+    if (institutionId !== undefined) {
+      throw new AppError('Organization cannot have an institution ID', 400);
+    };
+
     if (
-      organizationId === undefined
+      organizationId === undefined ||
+      organizationId === null ||
+      typeof organizationId !== 'string' ||
+      organizationId.trim().length === 0
     ) {
       throw new AppError('Invalid organization ID', 400)
     }
   }
 
-  // If user role is an institution, make sure it has a valid object
+  // If user role is an institution
   if (role === 'Institution') {
+    if (organizationId !== undefined) {
+      throw new AppError('Institution cannot have an organization ID', 400);
+    };
+
     if (
       institutionId === undefined ||
-      !mongoose.isValidObjectId(institutionId)
+      institutionId === null ||
+      typeof institutionId !== 'string' ||
+      institutionId.trim().length === 0
     ) {
       throw new AppError('Invalid institution ID', 400);
     };

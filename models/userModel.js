@@ -50,13 +50,12 @@ const userSchema = new mongoose.Schema({
     trim: true,
     required: function () {
       return this.role === 'Organization'
-    },
-    unique: true
+    }
   },
 
   institutionId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Institution',
+    type: String,
+    trim: true,
     required: function () {
       return this.role === 'Institution'
     }
