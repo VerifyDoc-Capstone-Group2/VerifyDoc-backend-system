@@ -7,7 +7,7 @@ const router = express.Router();
 // ====================================
 // POST
 // ====================================
-router.post('/register-organization', registerOrganizationController);
+router.post('/auth/register-organization', registerOrganizationController);
 
 
 

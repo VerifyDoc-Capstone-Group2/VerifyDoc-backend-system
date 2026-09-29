@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import { AppError } from "../errors/AppError.js";
 import { Organization } from "../models/organizationModel.js";
-import { Institution } from "../models/institutionModel.js";
 import { User } from "../models/userModel.js";
 
 
@@ -22,7 +21,7 @@ export const approveOrganization = async (organizationID, adminId) => {
 
     const existingOrganization = await Organization.findOne({
       organizationId: organizationID
-    });
+    }).session(dbSession);
 
     if (!existingOrganization) {
       throw new AppError('Organization not found', 404);
@@ -32,20 +31,35 @@ export const approveOrganization = async (organizationID, adminId) => {
       throw new AppError(`Organization cannot be approved because its status is ${existingOrganization.status}`, 400);
     }
 
+    const organizationOwner = await User.findOneAndUpdate(
+      {
+        _id: existingOrganization.ownerUserId
+      },
+      {
+        accountStatus: 'Active',
+        membershipStatus: 'Active'
+      },
+      { returnDocument: 'after' }
+    ).session(dbSession);
+
+    if (!organizationOwner) {
+      throw new AppError('Organization owner not found', 404);
+    }
+
     existingOrganization.status = 'Active';
     existingOrganization.approvedByAdminId = adminId;
     existingOrganization.approvedAt = new Date();
 
 
-    await existingOrganization.save();
+    await existingOrganization.save({ session: dbSession });
 
-    dbSession.commitTransaction();
+    await dbSession.commitTransaction();
 
     return existingOrganization;
   } catch (error) {
-    dbSession.abortTransaction();
+    await dbSession.abortTransaction();
     throw error;
   } finally {
-    dbSession.endSession();
+    await dbSession.endSession();
   }
 };
