@@ -141,7 +141,7 @@ export const createUser = async (userData, dbSession) => {
     };
   };
 
-  await User.create([{
+  const newUser = await User.create([{
     firstName,
     lastName,
     email,
@@ -156,6 +156,7 @@ export const createUser = async (userData, dbSession) => {
 );
 
   return {
+    _id: newUser[0]._id,
     firstName,
     lastName,
     email,
@@ -163,6 +164,7 @@ export const createUser = async (userData, dbSession) => {
     role,
     organizationId,
     institutionId,
+    membershipStatus: newUser[0].membershipStatus
   }
 
 };

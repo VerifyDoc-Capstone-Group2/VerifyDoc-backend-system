@@ -61,6 +61,17 @@ const userSchema = new mongoose.Schema({
     }
   },
 
+  membershipStatus: {
+    type: String,
+    trim: true,
+    enum: ['Pending', 'Active', 'Rejected'],
+    default: function () {
+      if (this.role === 'Organization' || this.role === 'Institution') {
+        return 'Pending'
+      }
+    }
+  },
+
   isEmailVerified: {
     type: Boolean,
     default: false
