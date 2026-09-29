@@ -166,3 +166,74 @@ export const createUser = async (userData, dbSession) => {
   }
 
 };
+
+
+export const loginUser = async (loginData) => {
+  const {
+    email,
+    password
+  } = loginData;
+
+  // Validate the data
+  if (
+    email === undefined ||
+    typeof email !== 'string' ||
+    email.trim().length === 0
+  ) {
+    throw new AppError('Invalid data passed into email', 400)
+  }
+
+  if (
+    password === undefined ||
+    typeof password !== 'string' ||
+    password.trim().length === 0
+  ) {
+    throw new AppError('Invalid data passed into email', 400)
+  }
+
+  if (
+    password.trim().length < 8
+  ) {
+    throw new AppError('Password must be greater than 8 or equals to 8 characters', 400);
+  }
+
+  // 1. Check if the user exists in the database by email
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new AppError("Invalid email or password", 400);
+  }
+
+  // 3. Compare they typed password wit the hashed password in the database
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    throw new AppError("Invalid email or password", 400);
+  }
+
+  // 2. Check if the account status allows login (matching our business rules!)
+  if (user.accountStatus !== "Active") {
+    throw new AppError(`Your account is currently ${user.accountStatus}. Please contact support.`, 403);
+  }
+
+  // 4. Generate a secure JWT token containing the user's ID and role
+  const token = jwt.sign(
+    {
+      userId: user._id,
+      role: user.role
+    },
+    process.env.JWT_SECRET || "fallback_secret",
+    { expiresIn: "1d" } // Token expires in 1 day
+  );
+
+  // Return the token and user info (excluding the password)
+  return {
+    token,
+    user: {
+      id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+      accountStatus: user.accountStatus
+    }
+  };
+};

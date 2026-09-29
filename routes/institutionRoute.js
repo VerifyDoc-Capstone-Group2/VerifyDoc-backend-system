@@ -6,7 +6,7 @@ const router = express.Router();
 // ====================================
 // POST
 // ====================================
-router.post('/', registerInstitutionController);
+router.post('/register-institution', registerInstitutionController);
 
 
 
