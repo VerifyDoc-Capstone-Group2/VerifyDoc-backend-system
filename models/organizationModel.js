@@ -75,7 +75,16 @@ const organizationSchema = new mongoose.Schema({
     ref: 'User'
   },
 
+  rejectedByAdminId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+
   approvedAt: {
+    type: Date,
+  },
+
+  rejectedAt: {
     type: Date,
   },
 
