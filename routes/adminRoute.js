@@ -1,6 +1,6 @@
 import express from 'express';
-import { approveOrganizationController } from '../controllers/adminController.js';
-import { authValidation } from '../middlewares/authMiddleware.js';
+import { approveInstitutionController, approveOrganizationController } from '../controllers/adminController.js';
+import { authValidation, authorizeAdminRoles } from '../middlewares/authMiddleware.js';
 
 
 const router = express.Router();
@@ -10,8 +10,11 @@ const router = express.Router();
 // PATCH
 // ====================================
 // To approve organization
-router.patch('/admin/organizations/:organizationId/approve', authValidation(), approveOrganizationController);
+router.patch('/admin/organizations/:organizationId/approve', authValidation(), authorizeAdminRoles(), approveOrganizationController);
 
+
+// To approve institution
+router.patch('/admin/institutions/:institutionId/approve', authValidation(), authorizeAdminRoles(), approveInstitutionController);
 
 
 export default router;

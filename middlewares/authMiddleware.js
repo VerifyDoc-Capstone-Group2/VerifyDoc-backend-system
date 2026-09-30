@@ -36,3 +36,22 @@ export const authValidation = () => {
 
   }
 };
+
+
+export const authorizeAdminRoles = () => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(403).json({
+        message: 'Authentication token required'
+      });
+    }
+
+    if (req.user.role !== 'Admin') {
+      return res.status(403).json({
+        message: 'Unauthorized access, only admins can access this route'
+      });
+    }
+
+    next();
+  }
+};

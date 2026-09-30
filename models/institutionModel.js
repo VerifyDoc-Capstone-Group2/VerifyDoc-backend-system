@@ -60,6 +60,11 @@ const institutionSchema = new mongoose.Schema({
     trim: true
   },
 
+  ownerUserId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+
   approvedByAdminId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
