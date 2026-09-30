@@ -65,6 +65,11 @@ const organizationSchema = new mongoose.Schema({
     default: 'Pending Approval'
   },
 
+  ownerUserId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+
   approvedByAdminId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

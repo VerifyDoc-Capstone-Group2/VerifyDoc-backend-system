@@ -178,6 +178,10 @@ export const registerOrganization = async (data) => {
       organizationId: organization.organizationId
     }, dbSession);
 
+    organization.ownerUserId = user._id;
+
+    await organization.save({ session: dbSession });
+
     await dbSession.commitTransaction();
 
     return {
