@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { trusted } from "mongoose";
 
 
 const organizationSchema = new mongoose.Schema({
@@ -30,7 +30,14 @@ const organizationSchema = new mongoose.Schema({
   },
 
   cacCertificate: {
-    url: String
+    url: {
+      type: String,
+      required: true
+    },
+    publicId: {
+      type: String,
+      required: true
+    }
   },
 
   officialEmail: {

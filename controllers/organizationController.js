@@ -1,4 +1,6 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { uploadToCloudinary } from '../services/cloudinaryService.js';
+import { AppError } from '../errors/AppError.js';
 import { createOrganization, registerOrganization } from '../services/organizationService.js';
 
 
@@ -16,7 +18,43 @@ export const createOrganizationController = asyncHandler(
 
 export const registerOrganizationController = asyncHandler(
   async (req, res) => {
-    const registeredOrganization = await registerOrganization(req.body);
+    const cacCertificate = req.files?.cacCertificate?.[0];
+
+    const profilePicture = req.files?.profilePicture?.[0];
+
+    if (!cacCertificate) {
+      throw new AppError('CAC certificate is required', 400);
+    };
+
+    const uploadedCertificate = await uploadToCloudinary(cacCertificate.buffer, {
+      folder: 'verifydoc/cac-documents',
+      resource_type: 'raw'
+    });
+
+    let uploadedProfilePicture;
+
+    if (profilePicture) {
+      uploadedProfilePicture = await uploadToCloudinary(profilePicture.buffer, {
+        folder: 'verifydoc/profile-pictures',
+        resource_type: 'image'
+      })
+    };
+
+    const data = {
+      ...req.body,
+      organization: {
+        ...req.body.organization,
+        cacCertificate: uploadedCertificate
+      },
+      user: {
+        ...req.body.user,
+        ...(uploadedProfilePicture && {
+          profilePicture: uploadedProfilePicture
+        })
+      }
+    }
+
+    const registeredOrganization = await registerOrganization(data);
 
     res.status(201).json({
       message: 'Organization and user created successfully',

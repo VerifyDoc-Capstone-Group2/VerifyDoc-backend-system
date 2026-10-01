@@ -1,10 +1,27 @@
-import { createUser, loginUser } from "../services/userService.js";
+import { uploadToCloudinary } from "../services/cloudinaryService.js";
+import { createUser, getUserById, loginUser, updateUser } from "../services/userService.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-
 
 export const createUserController = asyncHandler(
   async (req, res) => {
-    const newUser = await createUser(req.body);
+    let profilePicture;
+
+    if (req.file) {
+      profilePicture = await uploadToCloudinary(
+        req.file.buffer,
+        {
+          folder: 'verifydoc/profile-pictures',
+          resource_type: 'image'
+        }
+      )
+    };
+
+    const data = {
+      ...req.body,
+      ...(profilePicture && { profilePicture })
+    }
+
+    const newUser = await createUser(data);
 
     res.status(201).json({
       message: 'User created successfully',
@@ -21,6 +38,88 @@ export const loginController = asyncHandler(
     res.status(200).json({
       message: 'User logged in successfully',
       data: user
+    });
+  }
+);
+
+
+export const updateUserController = asyncHandler(
+  async (req, res) => {
+    const existingUser = await getUserById(req.user.userId);
+
+    if (!existingUser) {
+      throw new AppError('User not found', 404);
+    }
+
+    let uploadedProfilePicture;
+    let updatedUser;
+
+    try {
+      if (req.file) {
+        uploadedProfilePicture = await uploadToCloudinary(
+          req.file.buffer,
+          {
+            folder: 'verifydoc/profile-pictures',
+            resource_type: 'image'
+          }
+        );
+      }
+
+      const data = {
+        ...req.body,
+        ...(uploadedProfilePicture && {
+          profilePicture: uploadedProfilePicture
+        })
+      };
+
+      updatedUser = await updateUser(
+        req.user.userId,
+        data
+      );
+
+    } catch (error) {
+      if (uploadedProfilePicture?.publicId) {
+        try {
+          await deleteFromCloudinary(
+            uploadedProfilePicture.publicId,
+            {
+              resource_type: 'image'
+            }
+          );
+        } catch (cleanupError) {
+          console.error(
+            'Failed to clean up new profile picture:',
+            cleanupError
+          );
+        }
+      }
+
+      throw error;
+    }
+
+    
+    if (
+      uploadedProfilePicture &&
+      existingUser.profilePicture?.publicId
+    ) {
+      try {
+        await deleteFromCloudinary(
+          existingUser.profilePicture.publicId,
+          {
+            resource_type: 'image'
+          }
+        );
+      } catch (cleanupError) {
+        console.error(
+          'Failed to delete old profile picture:',
+          cleanupError
+        );
+      }
+    }
+
+    res.status(200).json({
+      message: 'Profile updated successfully',
+      data: updatedUser
     });
   }
 );

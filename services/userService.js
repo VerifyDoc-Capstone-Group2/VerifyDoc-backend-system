@@ -239,3 +239,99 @@ export const loginUser = async (loginData) => {
     }
   };
 };
+
+
+export const updateUser = async (userId, data) => {
+  const {
+    firstName,
+    lastName,
+    email,
+    phoneNumber,
+    profilePicture
+  } = data;
+
+  const updateData = {};
+
+  if (firstName !== undefined) {
+    if (typeof firstName !== 'string' || !firstName.trim()) {
+      throw new AppError('Invalid first name', 400);
+    }
+
+    updateData.firstName = firstName.trim();
+  }
+
+  if (lastName !== undefined) {
+    if (typeof lastName !== 'string' || !lastName.trim()) {
+      throw new AppError('Invalid last name', 400);
+    }
+
+    updateData.lastName = lastName.trim();
+  }
+
+  if (email !== undefined) {
+    if (typeof email !== 'string' || !email.trim()) {
+      throw new AppError('Invalid email', 400);
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const emailExists = await User.findOne({
+      email: normalizedEmail,
+      _id: { $ne: userId }
+    });
+
+    if (emailExists) {
+      throw new AppError('Email is already in use', 409);
+    }
+
+    updateData.email = normalizedEmail;
+    updateData.isEmailVerified = false;
+  }
+
+  if (phoneNumber !== undefined) {
+    if (
+      typeof phoneNumber !== 'string' ||
+      !phoneNumberValidator(phoneNumber)
+    ) {
+      throw new AppError('Invalid phone number', 400);
+    }
+
+    updateData.phoneNumber = phoneNumber.trim();
+  }
+
+  if (profilePicture !== undefined) {
+    if (
+      !profilePicture.url ||
+      !profilePicture.publicId
+    ) {
+      throw new AppError('Invalid profile picture', 400);
+    }
+
+    updateData.profilePicture = profilePicture;
+  };
+
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    updateData,
+    {
+      returnDocument: true,
+      runValidators: true
+    }
+  ).select('-password');
+
+  if (!updatedUser) {
+    throw new AppError('User not found', 404);
+  }
+
+  return updatedUser;
+};
+
+export const getUserById = async (userId) => {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  return user;
+};
