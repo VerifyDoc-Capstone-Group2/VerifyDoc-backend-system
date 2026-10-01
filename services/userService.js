@@ -190,17 +190,13 @@ export const loginUser = async (loginData) => {
     typeof password !== 'string' ||
     password.trim().length === 0
   ) {
-    throw new AppError('Invalid data passed into email', 400)
-  }
-
-  if (
-    password.trim().length < 8
-  ) {
-    throw new AppError('Password must be greater than 8 or equals to 8 characters', 400);
+    throw new AppError('Invalid data passed into password', 400)
   }
 
   // 1. Check if the user exists in the database by email
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ 
+    email: email.trim().toLowerCase()
+  });
   if (!user) {
     throw new AppError("Invalid email or password", 400);
   }
@@ -211,18 +207,13 @@ export const loginUser = async (loginData) => {
     throw new AppError("Invalid email or password", 400);
   }
 
-  // 2. Check if the account status allows login (matching our business rules!)
-  if (user.accountStatus !== "Active") {
-    throw new AppError(`Your account is currently ${user.accountStatus}. Please contact support.`, 403);
-  }
-
   // 4. Generate a secure JWT token containing the user's ID and role
   const token = jwt.sign(
     {
       userId: user._id,
       role: user.role
     },
-    process.env.JWT_SECRET || "fallback_secret",
+    process.env.JWT_SECRET,
     { expiresIn: "1d" } // Token expires in 1 day
   );
 
@@ -234,8 +225,14 @@ export const loginUser = async (loginData) => {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      phoneNumber: user.phoneNumber,
+      profilePicture: user.profilePicture,
       role: user.role,
-      accountStatus: user.accountStatus
+      accountStatus: user.accountStatus,
+      membershipStatus: user.membershipStatus,
+      organizationId: user.organizationId,
+      institutionId: user.institutionId,
+      isEmailVerified: user.isEmailVerified
     }
   };
 };
@@ -334,4 +331,22 @@ export const getUserById = async (userId) => {
   }
 
   return user;
+};
+
+export const getCurrentUser = async (userId) => {
+  if (
+    userId === undefined ||
+    typeof userId !== 'string' ||
+    !mongoose.isValidObjectId(userId)
+  ) {
+    throw new AppError('Invalid user ID', 400);
+  };
+
+  const existingUser = await User.findById(userId).select('-password');
+
+  if (!existingUser) {
+  throw new AppError('User not found', 404);
+  };
+
+  return existingUser;
 };

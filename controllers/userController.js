@@ -1,5 +1,5 @@
 import { uploadToCloudinary } from "../services/cloudinaryService.js";
-import { createUser, getUserById, loginUser, updateUser } from "../services/userService.js";
+import { createUser, getCurrentUser, getUserById, loginUser, updateUser } from "../services/userService.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const createUserController = asyncHandler(
@@ -120,6 +120,17 @@ export const updateUserController = asyncHandler(
     res.status(200).json({
       message: 'Profile updated successfully',
       data: updatedUser
+    });
+  }
+);
+
+export const getCurrentUserController = asyncHandler(
+  async (req, res) => {
+    const user = await getCurrentUser(req.user.userId);
+
+    res.status(200).json({
+      message: 'Current user retrieved successfully',
+      data: user
     });
   }
 );

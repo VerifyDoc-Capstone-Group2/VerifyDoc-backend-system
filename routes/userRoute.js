@@ -1,7 +1,7 @@
 import express from 'express';
-import { createUserController, loginController, updateUserController } from '../controllers/userController.js';
+import { createUserController, getCurrentUserController, loginController, updateUserController } from '../controllers/userController.js';
 import { uploadProfilePicture } from '../middlewares/uploadMiddleware.js';
-import { authValidation } from '../middlewares/authMiddleware.js';
+import { authValidation, requireActiveAccount } from '../middlewares/authMiddleware.js';
 
 
 const router = express.Router();
@@ -19,8 +19,15 @@ router.post('/auth/login', loginController);
 router.patch(
   '/users/me',
   authValidation(),
+  requireActiveAccount(),
   uploadProfilePicture.single('profilePicture'),
   updateUserController
 );
+
+// ====================================
+// GET
+// ====================================
+router.get('/auth/me', authValidation(), getCurrentUserController);
+
 
 export default router;

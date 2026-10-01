@@ -1,4 +1,6 @@
 import jwt from 'jsonwebtoken';
+import { AppError } from '../errors/AppError.js';
+import { User } from '../models/userModel.js';
 
 export const authValidation = () => {
   return (req, res, next) => {
@@ -51,6 +53,28 @@ export const authorizeAdminRoles = () => {
         message: 'Unauthorized access, only admins can access this route'
       });
     }
+
+    next();
+  }
+};
+
+
+export const requireActiveAccount = () => {
+  return async (req, res, next) => {
+
+    if (!req.user) {
+      throw new AppError('Authentication token required, user is not logged in', 403);
+    };
+
+    const existingUser = await User.findById(req.user.userId);
+
+    if (!existingUser) {
+      throw new AppError('User not found', 404);
+    };
+
+    if (existingUser.accountStatus !== 'Active') {
+      throw new AppError('User account status is not active', 403);
+    };
 
     next();
   }
