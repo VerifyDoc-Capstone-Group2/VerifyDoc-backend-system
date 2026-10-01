@@ -1,5 +1,5 @@
 import express from 'express';
-import { createUserController, getCurrentUserController, loginController, updateUserController } from '../controllers/userController.js';
+import { createUserController, forgotPasswordController, getCurrentUserController, loginController, updateUserController } from '../controllers/userController.js';
 import { uploadProfilePicture } from '../middlewares/uploadMiddleware.js';
 import { authValidation, requireActiveAccount } from '../middlewares/authMiddleware.js';
 
@@ -12,6 +12,8 @@ const router = express.Router();
 router.post('/auth/register', uploadProfilePicture.single('profilePicture'), createUserController);
 
 router.post('/auth/login', loginController);
+
+router.post('/auth/forgot-password', forgotPasswordController);
 
 // ====================================
 // PATCH

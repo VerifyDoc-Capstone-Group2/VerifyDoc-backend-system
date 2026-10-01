@@ -3,6 +3,9 @@ import jwt from "jsonwebtoken";
 import mongoose from 'mongoose';
 import { User } from "../models/userModel.js";
 import { AppError } from "../errors/AppError.js";
+import { generateOTP } from '../utils/randomNumberGenerator.js';
+import { passwordResetOTP } from '../models/otpModel.js';
+import { sendPasswordResetOTP } from './emailService.js';
 
 
 export const createUser = async (userData, dbSession) => {
@@ -349,4 +352,55 @@ export const getCurrentUser = async (userId) => {
   };
 
   return existingUser;
+};
+
+
+export const forgotPassword = async (data) => {
+  const {
+    email
+  } = data;
+
+  if (
+    email === undefined ||
+    typeof email !== 'string' ||
+    email.trim().length === 0
+  ) {
+    throw new AppError('Invalid data passed into email', 400);
+  };
+
+  const existingUser = await User.findOne({ email: email.trim().toLowerCase() });
+
+  if (!existingUser) {
+    return;
+  };
+
+  await passwordResetOTP.deleteMany({ userId: existingUser._id });
+
+  const OTPNumber = generateOTP().toString();
+
+  const hashedOTPNumber = await bcrypt.hash(OTPNumber, 12);
+
+  const expiresAt = new Date(
+    Date.now() + 10 * 60 * 1000
+  );
+
+  const otpRecord = await passwordResetOTP.create({
+    userId: existingUser._id,
+    otpHash: hashedOTPNumber,
+    expiresAt
+  });
+
+  try {
+
+    await sendPasswordResetOTP({
+      email: existingUser.email,
+      firstName: existingUser.firstName,
+      otp: OTPNumber
+    });
+
+  } catch (error) {
+    await passwordResetOTP.findByIdAndDelete(otpRecord._id);
+
+    throw error;
+  }
 };
