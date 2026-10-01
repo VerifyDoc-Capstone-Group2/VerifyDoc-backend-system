@@ -404,3 +404,153 @@ export const forgotPassword = async (data) => {
     throw error;
   }
 };
+
+
+export const verifyPasswordResetOTP = async (data) => {
+  const {
+    email,
+    otp
+  } = data;
+
+  if (
+    email === undefined ||
+    typeof email !== 'string' ||
+    email.trim().length === 0
+  ) {
+    throw new AppError('Invalid data passed into email', 400);
+  }
+
+  if (
+    otp === undefined ||
+    typeof otp !== 'string' ||
+    otp.trim().length === 0
+  ) {
+    throw new AppError('Invalid data passed into OTP', 400);
+  }
+
+  const existingUser = await User.findOne({ email: email.trim().toLowerCase() });
+
+  if (!existingUser) {
+    throw new AppError('User not found', 404);
+  }
+
+  const otpRecord = await passwordResetOTP.findOne({
+    userId: existingUser._id
+  });
+
+  if (!otpRecord) {
+    throw new AppError('User OTP record not found', 404);
+  };
+
+  if (otpRecord.expiresAt < new Date()) {
+    await passwordResetOTP.findByIdAndDelete(otpRecord._id);
+
+    throw new AppError('OTP has expired. Please request a new one', 400);
+  };
+
+  const isOTPValid = await bcrypt.compare(
+    otp.trim(),
+    otpRecord.otpHash
+  );
+
+  if (!isOTPValid) {
+    otpRecord.attempts += 1;
+
+    if (otpRecord.attempts >= 5) {
+      await passwordResetOTP.findByIdAndDelete(otpRecord._id);
+      throw new AppError('Too many failed attempts. Please request a new OTP', 429);
+    };
+
+    await otpRecord.save();
+
+    throw new AppError('Invalid OTP', 400);
+  };
+
+  const resetToken = jwt.sign(
+    {
+      userId: existingUser._id,
+      purpose: 'password-reset'
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: '10m'
+    }
+  );
+
+  await passwordResetOTP.findByIdAndDelete(
+    otpRecord._id
+  );
+
+  return {
+    resetToken
+  };
+};
+
+
+export const resetPassword = async (data) => {
+  const {
+    resetToken,
+    newPassword
+  } = data;
+
+  if (
+    resetToken === undefined ||
+    typeof resetToken !== 'string' ||
+    resetToken.trim().length === 0
+  ) {
+    throw new AppError('Reset token is required', 400);
+  }
+
+  if (
+    newPassword === undefined ||
+    typeof newPassword !== 'string' ||
+    newPassword.length < 8
+  ) {
+    throw new AppError(
+      'Password must be at least 8 characters',
+      400
+    );
+  }
+
+  let decodedToken;
+
+  try {
+    decodedToken = jwt.verify(
+      resetToken,
+      process.env.JWT_SECRET
+    );
+  } catch (error) {
+    throw new AppError(
+      'Reset token is invalid or has expired',
+      401
+    );
+  }
+
+  if (decodedToken.purpose !== 'password-reset') {
+    throw new AppError(
+      'Invalid password reset token',
+      401
+    );
+  }
+
+  const existingUser = await User.findById(
+    decodedToken.userId
+  );
+
+  if (!existingUser) {
+    throw new AppError('User not found', 404);
+  }
+
+  const hashedPassword = await bcrypt.hash(
+    newPassword,
+    12
+  );
+
+  existingUser.password = hashedPassword;
+
+  await existingUser.save();
+
+  return {
+    message: 'Password reset successfully'
+  };
+};

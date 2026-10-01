@@ -1,5 +1,5 @@
 import express from 'express';
-import { createUserController, forgotPasswordController, getCurrentUserController, loginController, updateUserController } from '../controllers/userController.js';
+import { createUserController, forgotPasswordController, getCurrentUserController, loginController, updateUserController, verifyPasswordResetOTPController } from '../controllers/userController.js';
 import { uploadProfilePicture } from '../middlewares/uploadMiddleware.js';
 import { authValidation, requireActiveAccount } from '../middlewares/authMiddleware.js';
 
@@ -14,6 +14,16 @@ router.post('/auth/register', uploadProfilePicture.single('profilePicture'), cre
 router.post('/auth/login', loginController);
 
 router.post('/auth/forgot-password', forgotPasswordController);
+
+router.post(
+  '/auth/forgot-password/verify',
+  verifyPasswordResetOTPController
+);
+
+router.post(
+  '/auth/reset-password',
+  resetPasswordController
+);
 
 // ====================================
 // PATCH
