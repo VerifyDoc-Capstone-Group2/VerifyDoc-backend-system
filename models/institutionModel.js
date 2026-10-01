@@ -60,12 +60,26 @@ const institutionSchema = new mongoose.Schema({
     trim: true
   },
 
+  ownerUserId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+
   approvedByAdminId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
 
+  rejectedByAdminId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+
   approvedAt: {
+    type: Date
+  },
+
+  rejectedAt: {
     type: Date
   },
 

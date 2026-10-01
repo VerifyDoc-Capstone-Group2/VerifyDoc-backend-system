@@ -135,7 +135,7 @@ export const registerInstitution = async (data) => {
   const dbSession = await mongoose.startSession();
 
   try {
-    await dbSession.startTransaction();
+    dbSession.startTransaction();
 
     // Sends the institution information to createInstitution()
     const institution = await createInstitution(data.institution, dbSession);
@@ -145,6 +145,10 @@ export const registerInstitution = async (data) => {
       ...data.user,
       institutionId: institution.institutionId
     }, dbSession);
+
+    institution.ownerUserId = user._id;
+
+    await institution.save({ session: dbSession });
 
     await dbSession.commitTransaction();
 
