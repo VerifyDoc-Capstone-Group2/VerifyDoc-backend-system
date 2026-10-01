@@ -1,4 +1,4 @@
-import { approveInstitution, approveOrganization, getApprovalQueue, getPendingInstitutions, getPendingOrganizations, getUsers, rejectInstitution, rejectOrganization } from "../services/adminService.js";
+import { approveInstitution, approveOrganization, getAdminDashboard, getApprovalQueue, getPendingInstitutions, getPendingOrganizations, getUsers, rejectInstitution, rejectOrganization } from "../services/adminService.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 
@@ -91,6 +91,18 @@ export const getUsersController = asyncHandler(
     res.status(200).json({
       message: 'Users retrieved successfully',
       data: fetchedUsers
+    });
+  }
+);
+
+
+export const getAdminDashboardController = asyncHandler(
+  async (req, res) => {
+    const dashboardData = await getAdminDashboard();
+
+    res.status(200).json({
+      message: 'Dashboard data retrieved successfully',
+      data: dashboardData
     });
   }
 );

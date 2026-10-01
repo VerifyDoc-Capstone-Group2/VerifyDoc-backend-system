@@ -407,3 +407,81 @@ export const getUsers = async (queryData) => {
     }
   };
 };
+
+
+export const getAdminDashboard = async () => {
+  const [
+    totalUsers,
+    citizens,
+    organizationUsers,
+    institutionUsers,
+    admins
+  ] = await Promise.all([
+    User.countDocuments(),
+    User.countDocuments({ role: 'Citizen' }),
+    User.countDocuments({ role: 'Organization' }),
+    User.countDocuments({ role: 'Institution' }),
+    User.countDocuments({ role: 'Admin' })
+  ]);
+
+  const [
+    totalOrganizations,
+    activeOrganizations,
+    pendingOrganizations,
+    rejectedOrganizations,
+    suspendedOrganizations,
+  ] = await Promise.all([
+    Organization.countDocuments(),
+    Organization.countDocuments({ status: 'Active' }),
+    Organization.countDocuments({ status: 'Pending Approval' }),
+    Organization.countDocuments({ status: 'Rejected' }),
+    Organization.countDocuments({ status: 'Suspended' })
+  ]);
+
+
+  const [
+    totalInstitutions,
+    activeInstitutions,
+    pendingInstitutions,
+    rejectedInstitutions,
+    suspendedInstitutions,
+  ] = await Promise.all([
+    Institution.countDocuments(),
+    Institution.countDocuments({ status: 'Active' }),
+    Institution.countDocuments({ status: 'Pending Approval' }),
+    Institution.countDocuments({ status: 'Rejected' }),
+    Institution.countDocuments({ status: 'Suspended' })
+  ]);
+
+  const activeEntities = activeInstitutions + activeOrganizations;
+  const pendingApprovals = pendingInstitutions + pendingOrganizations;
+
+  return  {
+    users: {
+      total: totalUsers,
+      citizens,
+      organizations: organizationUsers,
+      institutions: institutionUsers,
+      admins
+    },
+
+    organizations: {
+      total: totalOrganizations,
+      active: activeOrganizations,
+      pending: pendingOrganizations,
+      rejected: rejectedOrganizations,
+      suspended: suspendedOrganizations
+    },
+
+    institutions: {
+      total: totalInstitutions,
+      active: activeInstitutions,
+      pending: pendingInstitutions,
+      rejected: rejectedInstitutions,
+      suspended: suspendedInstitutions
+    },
+
+    activeEntities,
+    pendingApprovals
+  };
+};
