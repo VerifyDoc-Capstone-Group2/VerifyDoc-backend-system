@@ -1,5 +1,5 @@
 import express from 'express';
-import { approveInstitutionController, approveOrganizationController, rejectInstitutionController, rejectOrganizationController, pendingOrganizationsController, pendingInstitutionsController, approvalQueueController } from '../controllers/adminController.js';
+import { approveInstitutionController, approveOrganizationController, rejectInstitutionController, rejectOrganizationController, pendingOrganizationsController, pendingInstitutionsController, approvalQueueController, getUsersController, getAdminDashboardController } from '../controllers/adminController.js';
 import { authValidation, authorizeAdminRoles } from '../middlewares/authMiddleware.js';
 
 
@@ -47,6 +47,22 @@ router.get(
 
 // To get approval queue
 router.get ('/admin/approval-queue', authValidation(), authorizeAdminRoles(), approvalQueueController);
+
+// To get all user
+router.get(
+  '/admin/users',
+  authValidation(),
+  authorizeAdminRoles(),
+  getUsersController
+);
+
+// To get dashboard data
+router.get(
+  '/admin/dashboard',
+  authValidation(),
+  authorizeAdminRoles(),
+  getAdminDashboardController
+);
 
 
 export default router;
