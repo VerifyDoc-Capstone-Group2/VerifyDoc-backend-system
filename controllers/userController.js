@@ -1,5 +1,5 @@
 import { uploadToCloudinary } from "../services/cloudinaryService.js";
-import { createUser, getCurrentUser, getUserById, loginUser, updateUser } from "../services/userService.js";
+import { createUser, forgotPassword, getCurrentUser, getUserById, loginUser, updateUser, verifyPasswordResetOTP, resetPassword } from "../services/userService.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const createUserController = asyncHandler(
@@ -131,6 +131,39 @@ export const getCurrentUserController = asyncHandler(
     res.status(200).json({
       message: 'Current user retrieved successfully',
       data: user
+    });
+  }
+);
+
+
+export const forgotPasswordController = asyncHandler(
+  async (req, res) => {
+    await forgotPassword(req.body);
+
+    res.status(200).json({
+      message: 'If an account exists with that email, a password reset code has been sent.'
+    });
+  }
+);
+
+
+export const verifyPasswordResetOTPController = asyncHandler(
+  async (req, res) => {
+    const result = await verifyPasswordResetOTP(req.body);
+
+    res.status(200).json({
+      message: 'OTP verified successfully',
+      data: result
+    });
+  }
+);
+
+export const resetPasswordController = asyncHandler(
+  async (req, res) => {
+    await resetPassword(req.body);
+
+    res.status(200).json({
+      message: 'Password reset successfully'
     });
   }
 );
