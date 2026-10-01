@@ -1,5 +1,5 @@
 import express from 'express';
-import { approveInstitutionController, approveOrganizationController, rejectInstitutionController, rejectOrganizationController } from '../controllers/adminController.js';
+import { approveInstitutionController, approveOrganizationController, rejectInstitutionController, rejectOrganizationController, pendingOrganizationsController, pendingInstitutionsController, approvalQueueController } from '../controllers/adminController.js';
 import { authValidation, authorizeAdminRoles } from '../middlewares/authMiddleware.js';
 
 
@@ -23,6 +23,30 @@ router.patch('/admin/institutions/:institutionId/approve', authValidation(), aut
 
 // To reject institution
 router.patch('/admin/institutions/:institutionId/reject', authValidation(), authorizeAdminRoles(), rejectInstitutionController);
+
+
+// ====================================
+// GET
+// ====================================
+// To get pending organizations
+router.get(
+  '/admin/organizations/pending',
+  authValidation(),
+  authorizeAdminRoles(),
+  pendingOrganizationsController
+);
+
+
+// To get pending institutions
+router.get(
+  '/admin/institutions/pending',
+  authValidation(),
+  authorizeAdminRoles(),
+  pendingInstitutionsController
+);
+
+// To get approval queue
+router.get ('/admin/approval-queue', authValidation(), authorizeAdminRoles(), approvalQueueController);
 
 
 export default router;

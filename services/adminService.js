@@ -275,3 +275,135 @@ export const rejectInstitution = async (institutionID, adminId, rejectionData) =
     await dbSession.endSession();
   }
 };
+
+
+export const getPendingOrganizations = async () => {
+  
+  const pendingOrganizations = await Organization.find({
+    status: 'Pending Approval'
+  }).sort({ createdAt: 1 });
+
+  return pendingOrganizations;
+  
+};
+
+
+export const getPendingInstitutions = async () => {
+  
+  const pendingInstitutions = await Institution.find({
+    status: 'Pending Approval'
+  }).sort({ createdAt: 1 });
+
+  return pendingInstitutions;
+
+};
+
+export const getApprovalQueue = async () => {
+  const [organizations, institutions] = await Promise.all([
+    getPendingOrganizations(),
+    getPendingInstitutions()
+  ]);
+
+  return {
+    organizations,
+    institutions
+  };
+};
+
+export const getUsers = async (queryData) => {
+  const {
+    page = 1,
+    limit = 20,
+    role,
+    accountStatus,
+    sort = 'newest'
+  } = queryData;
+
+  // Convert query strings to numbers
+  const pageNumber = Number(page);
+  const limitNumber = Number(limit);
+
+  // Validate pagination
+  if (
+    !Number.isInteger(pageNumber) ||
+    pageNumber < 1
+  ) {
+    throw new AppError('Invalid page number', 400);
+  }
+
+  if (
+    !Number.isInteger(limitNumber) ||
+    limitNumber < 1 ||
+    limitNumber > 100
+  ) {
+    throw new AppError('Invalid limit', 400);
+  }
+
+  // Build filter dynamically
+  const filter = {};
+
+  if (role) {
+    const validRoles = [
+      'Citizen',
+      'Organization',
+      'Institution',
+      'Admin'
+    ];
+
+    if (!validRoles.includes(role)) {
+      throw new AppError('Invalid user role', 400);
+    }
+
+    filter.role = role;
+  }
+
+  if (accountStatus) {
+    const validStatuses = [
+      'Active',
+      'Pending Approval',
+      'Rejected'
+    ];
+
+    if (!validStatuses.includes(accountStatus)) {
+      throw new AppError('Invalid account status', 400);
+    }
+
+    filter.accountStatus = accountStatus;
+  }
+
+  // Sorting
+  let sortOption;
+
+  if (sort === 'newest') {
+    sortOption = { createdAt: -1 };
+  } else if (sort === 'oldest') {
+    sortOption = { createdAt: 1 };
+  } else {
+    throw new AppError('Invalid sort option', 400);
+  }
+
+  // Pagination
+  const skip = (pageNumber - 1) * limitNumber;
+
+  const [users, totalUsers] = await Promise.all([
+    User.find(filter)
+      .select('-password')
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limitNumber),
+
+    User.countDocuments(filter)
+  ]);
+
+  const totalPages = Math.ceil(totalUsers / limitNumber);
+
+  return {
+    users,
+    pagination: {
+      currentPage: pageNumber,
+      limit: limitNumber,
+      totalUsers,
+      totalPages
+    }
+  };
+};

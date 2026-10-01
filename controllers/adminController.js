@@ -1,4 +1,4 @@
-import { approveInstitution, approveOrganization, rejectInstitution, rejectOrganization } from "../services/adminService.js";
+import { approveInstitution, approveOrganization, getApprovalQueue, getPendingInstitutions, getPendingOrganizations, getUsers, rejectInstitution, rejectOrganization } from "../services/adminService.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 
@@ -45,6 +45,52 @@ export const rejectInstitutionController = asyncHandler(
     res.status(200).json({
       message: 'Institution was rejected successfully',
       data: rejectedInstitution
+    });
+  }
+);
+
+
+export const pendingOrganizationsController = asyncHandler(
+  async (req, res) => {
+    const pendingOrganizations = await getPendingOrganizations();
+
+    res.status(200).json({
+      message: "Pending organizations retrieved successfully",
+      data: pendingOrganizations
+    });
+  }
+);
+
+
+export const pendingInstitutionsController = asyncHandler(
+  async (req, res) => {
+    const pendingInstitutions = await getPendingInstitutions();
+
+    res.status(200).json({
+      message: "Pending institutions retrieved successfully",
+      data: pendingInstitutions
+    });
+  }
+);
+
+export const approvalQueueController = asyncHandler(
+  async (req, res) => {
+    const approvalQueue = await getApprovalQueue();
+
+    res.status(200).json({
+      message: 'Approval queue retrieved successfully',
+      data: approvalQueue
+    });
+  }
+);
+
+export const getUsersController = asyncHandler(
+  async(req, res) => {
+    const fetchedUsers = await getUsers(req.query);
+
+    res.status(200).json({
+      message: 'Users retrieved successfully',
+      data: fetchedUsers
     });
   }
 );
