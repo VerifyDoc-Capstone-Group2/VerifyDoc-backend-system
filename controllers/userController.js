@@ -167,3 +167,13 @@ export const resetPasswordController = asyncHandler(
     });
   }
 );
+
+export const resendPasswordResetOTPController = asyncHandler(
+  async (req, res) => {
+    await forgotPassword(req.body);
+
+    res.status(200).json({
+      message: 'If an account exists with that email, a new password reset code has been sent.'
+    });
+  }
+);
