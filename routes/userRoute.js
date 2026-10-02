@@ -32,13 +32,11 @@ router.post(
 
 router.post(
   '/auth/email/send-verification',
-  authValidation(),
   sendVerificationOTPController
 );
 
 router.post(
   '/auth/email/verify',
-  authValidation(),
   verifyEmailOTPController
 );
 

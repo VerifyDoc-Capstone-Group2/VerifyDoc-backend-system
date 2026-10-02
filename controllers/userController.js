@@ -1,6 +1,7 @@
 import { uploadToCloudinary } from "../services/cloudinaryService.js";
 import { createUser, forgotPassword, getCurrentUser, getUserById, loginUser, updateUser, verifyPasswordResetOTP, resetPassword, sendVerificationOTP, verifyEmailOTP } from "../services/userService.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { AppError } from "../errors/AppError.js";
 
 export const createUserController = asyncHandler(
   async (req, res) => {
@@ -22,6 +23,17 @@ export const createUserController = asyncHandler(
     }
 
     const newUser = await createUser(data);
+
+    try {
+      await sendVerificationOTP({
+        email: newUser.email
+      });
+    } catch (error) {
+      console.error(
+        'Failed to send verification OTP:',
+        error.message
+      );
+    }
 
     res.status(201).json({
       message: 'User created successfully',
@@ -180,10 +192,10 @@ export const resendPasswordResetOTPController = asyncHandler(
 
 export const sendVerificationOTPController = asyncHandler(
   async (req, res) => {
-    await sendVerificationOTP(req.user.userId);
+    await sendVerificationOTP(req.body);
 
     res.status(200).json({
-      message: 'Verification code sent successfully'
+      message: 'If the account exists and is not verified, a verification code has been sent.'
     });
   }
 );
@@ -191,7 +203,6 @@ export const sendVerificationOTPController = asyncHandler(
 export const verifyEmailOTPController = asyncHandler(
   async (req, res) => {
     const result = await verifyEmailOTP(
-      req.user.userId,
       req.body
     );
 

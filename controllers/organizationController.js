@@ -2,6 +2,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { uploadToCloudinary } from '../services/cloudinaryService.js';
 import { AppError } from '../errors/AppError.js';
 import { createOrganization, registerOrganization } from '../services/organizationService.js';
+import { sendVerificationOTP } from '../services/userService.js';
 
 
 export const createOrganizationController = asyncHandler(
@@ -55,6 +56,17 @@ export const registerOrganizationController = asyncHandler(
     }
 
     const registeredOrganization = await registerOrganization(data);
+
+    try {
+      await sendVerificationOTP({
+        email: result.user.email
+      });
+    } catch (error) {
+      console.error(
+        'Failed to send verification OTP:',
+        error.message
+      );
+    }
 
     res.status(201).json({
       message: 'Organization and user created successfully',

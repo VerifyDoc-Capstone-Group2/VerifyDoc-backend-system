@@ -148,7 +148,7 @@ export const createUser = async (userData, dbSession) => {
   const newUser = await User.create([{
     firstName,
     lastName,
-    email,
+    email: email.trim().toLowerCase(),
     password: hashedPassword,
     phoneNumber,
     role,
@@ -163,7 +163,7 @@ export const createUser = async (userData, dbSession) => {
     _id: newUser[0]._id,
     firstName,
     lastName,
-    email,
+    email: newUser[0].email,
     phoneNumber,
     role,
     organizationId,
@@ -556,11 +556,27 @@ export const resetPassword = async (data) => {
   };
 };
 
-export const sendVerificationOTP = async (userId) => {
-  const existingUser = await User.findById(userId);
+export const sendVerificationOTP = async (data) => {
+  const { email } = data;
+
+  if (
+    email === undefined ||
+    typeof email !== 'string' ||
+    email.trim().length === 0
+  ) {
+    throw new AppError(
+      'Invalid data passed into email',
+      400
+    );
+  }
+
+  const existingUser = await User.findOne({
+    email: email.trim().toLowerCase()
+  });
 
   if (!existingUser) {
-    throw new AppError('User not found', 404);
+    // Don't expose whether an account exists
+    return;
   }
 
   if (existingUser.isEmailVerified) {
@@ -570,7 +586,6 @@ export const sendVerificationOTP = async (userId) => {
     );
   }
 
-  // Remove any previous verification OTP
   await EmailVerificationOTP.deleteMany({
     userId: existingUser._id
   });
@@ -598,7 +613,6 @@ export const sendVerificationOTP = async (userId) => {
       firstName: existingUser.firstName,
       otp: OTPNumber
     });
-
   } catch (error) {
     await EmailVerificationOTP.findByIdAndDelete(
       otpRecord._id
@@ -607,12 +621,22 @@ export const sendVerificationOTP = async (userId) => {
     throw error;
   }
 };
+export const verifyEmailOTP = async (data) => {
+  const {
+    email,
+    otp
+  } = data;
 
-export const verifyEmailOTP = async (
-  userId,
-  data
-) => {
-  const { otp } = data;
+  if (
+    email === undefined ||
+    typeof email !== 'string' ||
+    email.trim().length === 0
+  ) {
+    throw new AppError(
+      'Invalid data passed into email',
+      400
+    );
+  }
 
   if (
     otp === undefined ||
@@ -625,10 +649,15 @@ export const verifyEmailOTP = async (
     );
   }
 
-  const existingUser = await User.findById(userId);
+  const existingUser = await User.findOne({
+    email: email.trim().toLowerCase()
+  });
 
   if (!existingUser) {
-    throw new AppError('User not found', 404);
+    throw new AppError(
+      'Invalid verification request',
+      400
+    );
   }
 
   if (existingUser.isEmailVerified) {
@@ -649,7 +678,6 @@ export const verifyEmailOTP = async (
     );
   }
 
-  // Check expiration
   if (otpRecord.expiresAt < new Date()) {
     await EmailVerificationOTP.findByIdAndDelete(
       otpRecord._id
@@ -697,6 +725,6 @@ export const verifyEmailOTP = async (
   );
 
   return {
-    isEmailVerified: existingUser.isEmailVerified
+    isEmailVerified: true
   };
 };
