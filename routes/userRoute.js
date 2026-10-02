@@ -1,5 +1,5 @@
 import express from 'express';
-import { createUserController, forgotPasswordController, getCurrentUserController, loginController, updateUserController, verifyPasswordResetOTPController, resetPasswordController, resendPasswordResetOTPController } from '../controllers/userController.js';
+import { createUserController, forgotPasswordController, getCurrentUserController, loginController, updateUserController, verifyPasswordResetOTPController, resetPasswordController, resendPasswordResetOTPController, sendVerificationOTPController, verifyEmailOTPController } from '../controllers/userController.js';
 import { uploadProfilePicture } from '../middlewares/uploadMiddleware.js';
 import { authValidation, requireActiveAccount } from '../middlewares/authMiddleware.js';
 
@@ -28,6 +28,18 @@ router.post(
 router.post(
   '/auth/resend-password-otp',
   resendPasswordResetOTPController
+);
+
+router.post(
+  '/auth/email/send-verification',
+  authValidation(),
+  sendVerificationOTPController
+);
+
+router.post(
+  '/auth/email/verify',
+  authValidation(),
+  verifyEmailOTPController
 );
 
 // ====================================

@@ -5,7 +5,8 @@ import { User } from "../models/userModel.js";
 import { AppError } from "../errors/AppError.js";
 import { generateOTP } from '../utils/randomNumberGenerator.js';
 import { passwordResetOTP } from '../models/OTPModel.js';
-import { sendPasswordResetOTP } from './emailService.js';
+import { EmailVerificationOTP } from '../models/emailOTPModel.js';
+import { sendPasswordResetOTP, sendEmailVerificationOTP } from './emailService.js';
 
 
 export const createUser = async (userData, dbSession) => {
@@ -552,5 +553,150 @@ export const resetPassword = async (data) => {
 
   return {
     message: 'Password reset successfully'
+  };
+};
+
+export const sendVerificationOTP = async (userId) => {
+  const existingUser = await User.findById(userId);
+
+  if (!existingUser) {
+    throw new AppError('User not found', 404);
+  }
+
+  if (existingUser.isEmailVerified) {
+    throw new AppError(
+      'Email is already verified',
+      400
+    );
+  }
+
+  // Remove any previous verification OTP
+  await EmailVerificationOTP.deleteMany({
+    userId: existingUser._id
+  });
+
+  const OTPNumber = generateOTP().toString();
+
+  const hashedOTPNumber = await bcrypt.hash(
+    OTPNumber,
+    12
+  );
+
+  const expiresAt = new Date(
+    Date.now() + 10 * 60 * 1000
+  );
+
+  const otpRecord = await EmailVerificationOTP.create({
+    userId: existingUser._id,
+    otpHash: hashedOTPNumber,
+    expiresAt
+  });
+
+  try {
+    await sendEmailVerificationOTP({
+      email: existingUser.email,
+      firstName: existingUser.firstName,
+      otp: OTPNumber
+    });
+
+  } catch (error) {
+    await EmailVerificationOTP.findByIdAndDelete(
+      otpRecord._id
+    );
+
+    throw error;
+  }
+};
+
+export const verifyEmailOTP = async (
+  userId,
+  data
+) => {
+  const { otp } = data;
+
+  if (
+    otp === undefined ||
+    typeof otp !== 'string' ||
+    otp.trim().length === 0
+  ) {
+    throw new AppError(
+      'Verification code is required',
+      400
+    );
+  }
+
+  const existingUser = await User.findById(userId);
+
+  if (!existingUser) {
+    throw new AppError('User not found', 404);
+  }
+
+  if (existingUser.isEmailVerified) {
+    throw new AppError(
+      'Email is already verified',
+      400
+    );
+  }
+
+  const otpRecord = await EmailVerificationOTP.findOne({
+    userId: existingUser._id
+  });
+
+  if (!otpRecord) {
+    throw new AppError(
+      'Verification code not found. Please request a new one',
+      404
+    );
+  }
+
+  // Check expiration
+  if (otpRecord.expiresAt < new Date()) {
+    await EmailVerificationOTP.findByIdAndDelete(
+      otpRecord._id
+    );
+
+    throw new AppError(
+      'Verification code has expired. Please request a new one',
+      400
+    );
+  }
+
+  const isOTPValid = await bcrypt.compare(
+    otp.trim(),
+    otpRecord.otpHash
+  );
+
+  if (!isOTPValid) {
+    otpRecord.attempts += 1;
+
+    if (otpRecord.attempts >= 5) {
+      await EmailVerificationOTP.findByIdAndDelete(
+        otpRecord._id
+      );
+
+      throw new AppError(
+        'Too many failed attempts. Please request a new verification code',
+        429
+      );
+    }
+
+    await otpRecord.save();
+
+    throw new AppError(
+      'Invalid verification code',
+      400
+    );
+  }
+
+  existingUser.isEmailVerified = true;
+
+  await existingUser.save();
+
+  await EmailVerificationOTP.findByIdAndDelete(
+    otpRecord._id
+  );
+
+  return {
+    isEmailVerified: existingUser.isEmailVerified
   };
 };

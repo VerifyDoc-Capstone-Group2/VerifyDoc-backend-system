@@ -1,5 +1,5 @@
 import { uploadToCloudinary } from "../services/cloudinaryService.js";
-import { createUser, forgotPassword, getCurrentUser, getUserById, loginUser, updateUser, verifyPasswordResetOTP, resetPassword } from "../services/userService.js";
+import { createUser, forgotPassword, getCurrentUser, getUserById, loginUser, updateUser, verifyPasswordResetOTP, resetPassword, sendVerificationOTP, verifyEmailOTP } from "../services/userService.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const createUserController = asyncHandler(
@@ -174,6 +174,30 @@ export const resendPasswordResetOTPController = asyncHandler(
 
     res.status(200).json({
       message: 'If an account exists with that email, a new password reset code has been sent.'
+    });
+  }
+);
+
+export const sendVerificationOTPController = asyncHandler(
+  async (req, res) => {
+    await sendVerificationOTP(req.user.userId);
+
+    res.status(200).json({
+      message: 'Verification code sent successfully'
+    });
+  }
+);
+
+export const verifyEmailOTPController = asyncHandler(
+  async (req, res) => {
+    const result = await verifyEmailOTP(
+      req.user.userId,
+      req.body
+    );
+
+    res.status(200).json({
+      message: 'Email verified successfully',
+      data: result
     });
   }
 );
