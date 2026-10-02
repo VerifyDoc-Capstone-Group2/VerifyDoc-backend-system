@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 import { User } from "../models/userModel.js";
 import { AppError } from "../errors/AppError.js";
 import { generateOTP } from '../utils/randomNumberGenerator.js';
-import { passwordResetOTP } from '../models/otpModel.js';
+import { passwordResetOTP } from '../models/OTPModel.js';
 import { sendPasswordResetOTP } from './emailService.js';
 
 
