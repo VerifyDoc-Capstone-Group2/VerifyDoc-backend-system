@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "seed": "node seeds/seed.js"
   },
   "repository": {
@@ -35,5 +37,9 @@
     "mongoose": "^9.10.2",
     "multer": "^2.4.0",
     "nodemon": "^3.1.14"
+  },
+  "devDependencies": {
+    "supertest": "^7.3.0",
+    "vitest": "^4.1.11"
   }
 }
