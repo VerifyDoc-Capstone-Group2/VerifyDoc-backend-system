@@ -1,5 +1,5 @@
 import express from 'express';
-import { createUserController, forgotPasswordController, getCurrentUserController, loginController, updateUserController, verifyPasswordResetOTPController } from '../controllers/userController.js';
+import { createUserController, forgotPasswordController, getCurrentUserController, loginController, updateUserController, verifyPasswordResetOTPController, resetPasswordController } from '../controllers/userController.js';
 import { uploadProfilePicture } from '../middlewares/uploadMiddleware.js';
 import { authValidation, requireActiveAccount } from '../middlewares/authMiddleware.js';
 
