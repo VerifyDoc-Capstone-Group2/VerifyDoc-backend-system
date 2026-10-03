@@ -8,9 +8,20 @@ import { errorHandler } from './middlewares/errorHandler.js';
 
 const app = express();
 
+const allowedOrigins = [
+  'http://127.0.0.1:5500',
+  'http://localhost:5500',
+  process.env.FRONTEND_URL
+];
+
 app.use(cors({
-  origin: '*',
-  credentials: true
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    callback(new Error('Not allowed by CORS'));
+  }
 }));
 
 app.use(express.json());
