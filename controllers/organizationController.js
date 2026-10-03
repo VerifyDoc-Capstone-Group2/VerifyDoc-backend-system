@@ -59,7 +59,7 @@ export const registerOrganizationController = asyncHandler(
 
     try {
       await sendVerificationOTP({
-        email: result.user.email
+        email: registeredOrganization.user.email
       });
     } catch (error) {
       console.error(

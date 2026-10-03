@@ -168,7 +168,9 @@ export const createUser = async (userData, dbSession) => {
     role,
     organizationId,
     institutionId,
-    membershipStatus: newUser[0].membershipStatus
+    membershipStatus: newUser[0].membershipStatus,
+    isEmailVerified: newUser[0].isEmailVerified,
+    accountStatus: newUser[0].accountStatus
   }
 
 };
