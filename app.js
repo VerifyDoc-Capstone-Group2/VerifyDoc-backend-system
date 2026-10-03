@@ -8,13 +8,15 @@ import { errorHandler } from './middlewares/errorHandler.js';
 
 const app = express();
 
-const allowedOrigins = [
-  'http://127.0.0.1:5500',
-  'http://localhost:5500',
-  process.env.FRONTEND_URL
-];
+const corsOptions = {
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
 
-app.use(cors());
+app.use(cors(corsOptions));
+
+app.options(/.*/, cors(corsOptions)); // Enable pre-flight for all routes
 
 app.use(express.json());
 
