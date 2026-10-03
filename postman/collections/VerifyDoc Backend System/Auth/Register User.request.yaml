@@ -1,0 +1,19 @@
+$kind: http-request
+method: POST
+url: '{{base_url}}/auth/register'
+order: 1000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john.doe@example.com",
+      "password": "password123",
+      "phoneNumber": "08012345678",
+      "role": "Citizen"
+    }
+examples: './.resources/Register User.resources/examples'

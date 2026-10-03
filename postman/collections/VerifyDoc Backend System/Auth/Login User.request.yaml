@@ -1,0 +1,27 @@
+$kind: http-request
+url: "{{base_url}}/auth/login"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"email\": \"johnkoto2tb@gmail.com\",\r
+
+    \    \"password\": \"Temiloluwa_1\"\r
+
+    }"
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 4184580747767018
+scripts:
+  - type: afterResponse
+    code: |-
+      const responseBody = pm.response.json();
+      const token = responseBody.data.token;
+      if (token) {
+          pm.globals.set("token", token);
+          console.log("Token saved to globals:", token);
+      }
+    language: text/javascript

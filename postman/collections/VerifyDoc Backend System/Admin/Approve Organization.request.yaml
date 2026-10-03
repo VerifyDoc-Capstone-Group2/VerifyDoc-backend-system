@@ -1,0 +1,8 @@
+$kind: http-request
+url: "{{base_url}}/admin/organizations/VDOC-ORG-NOV-5342/approve"
+method: PATCH
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 1790707386253

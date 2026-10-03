@@ -1,0 +1,7 @@
+$kind: collection
+description: |-
+  API collection for the VerifyDoc Backend System.
+  Covers user registration for Citizens, Organizations, and Institutions.
+variables:
+  base_url: http://localhost:5000
+  token: ""

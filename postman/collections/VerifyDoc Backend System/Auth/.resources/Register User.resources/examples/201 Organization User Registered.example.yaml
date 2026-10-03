@@ -1,0 +1,41 @@
+$kind: http-example
+name: '201 Organization User Registered'
+order: 2000
+request:
+  url: '{{base_url}}/auth/register'
+  method: POST
+  headers:
+    - key: Content-Type
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "firstName": "Jane",
+        "lastName": "Smith",
+        "email": "jane.smith@orgcorp.com",
+        "password": "securepass99",
+        "phoneNumber": "08098765432",
+        "role": "Organization",
+        "organizationId": "64f1a2b3c4d5e6f7a8b9c0d1"
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    - key: Content-Type
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "message": "User created successfully",
+        "data": {
+          "firstName": "Jane",
+          "lastName": "Smith",
+          "email": "jane.smith@orgcorp.com",
+          "phoneNumber": "08098765432",
+          "role": "Organization",
+          "organizationId": "64f1a2b3c4d5e6f7a8b9c0d1"
+        }
+      }

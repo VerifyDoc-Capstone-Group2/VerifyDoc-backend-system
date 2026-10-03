@@ -1,0 +1,39 @@
+$kind: http-example
+name: '201 Institution User Registered'
+order: 3000
+request:
+  url: '{{base_url}}/auth/register'
+  method: POST
+  headers:
+    - key: Content-Type
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "firstName": "Emeka",
+        "lastName": "Okafor",
+        "email": "emeka.okafor@university.edu.ng",
+        "password": "mypassword1",
+        "role": "Institution",
+        "institutionId": "64f1a2b3c4d5e6f7a8b9c0d2"
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    - key: Content-Type
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "message": "User created successfully",
+        "data": {
+          "firstName": "Emeka",
+          "lastName": "Okafor",
+          "email": "emeka.okafor@university.edu.ng",
+          "role": "Institution",
+          "institutionId": "64f1a2b3c4d5e6f7a8b9c0d2"
+        }
+      }

@@ -1,0 +1,45 @@
+$kind: http-request
+url: "{{base_url}}/auth/register-institution"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"institution\" : {\r
+
+    \        \"institutionName\": \"Olabisi Onabanjo University\",\r
+
+    \        \"institutionType\": \"University\",\r
+
+    \        \"officialEmail\": \"oou@unversity.vom\",\r
+
+    \        \"phoneNumber\": \"+2341122334455\",\r
+
+    \        \"address\": \"1 Example street, Example Road, Demo\",\r
+
+    \        \"website\": \"https://oou.com\",\r
+
+    \        \"accreditationDocument\":{\r
+
+    \            \"url\": \"https://ooudocument.com\"\r
+
+    \        }\r
+
+    \    },\r
+
+    \    \"user\" : {\r
+
+    \        \"firstName\": \"Example\",\r
+
+    \        \"lastName\": \"Bow\",\r
+
+    \        \"email\": \"Example.bow@example.com\",\r
+
+    \        \"password\": \"password124\",\r
+
+    \        \"role\": \"Institution\"\r
+
+    \    }\r
+
+    }"
+order: 3992892794630634

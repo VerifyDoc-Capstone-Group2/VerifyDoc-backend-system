@@ -1,0 +1,41 @@
+$kind: http-request
+url: "{{base_url}}/auth/register-organization"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"organization\" : {\r
+
+    \        \"organizationName\": \"Example-3 Oraganization\",\r
+
+    \        \"organizationType\": \"Employer\",\r
+
+    \        \"cacNumber\": \"RC 564367\",\r
+
+    \        \"officialEmail\": \"example@demo-3.com\",\r
+
+    \        \"phoneNumber\": \"+2341122334455\",\r
+
+    \        \"address\": \"1 Example street, Example Road, Demo\",\r
+
+    \        \"website\": \"https://example-3.com\"\r
+
+    \    },\r
+
+    \    \"user\" : {\r
+
+    \        \"firstName\": \"Duck\",\r
+
+    \        \"lastName\": \"Bow\",\r
+
+    \        \"email\": \"duck.bow@example.com\",\r
+
+    \        \"password\": \"password124\",\r
+
+    \        \"role\": \"Organization\"\r
+
+    \    }\r
+
+    }"
+order: 3033744483025221

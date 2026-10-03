@@ -1,0 +1,8 @@
+$kind: http-request
+url: "{{base_url}}/admin/institutions/VDOC-INS-WES-2289/approve"
+method: PATCH
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 418615841955653

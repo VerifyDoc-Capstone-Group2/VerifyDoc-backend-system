@@ -1,0 +1,32 @@
+$kind: http-example
+name: '400 Invalid Role'
+order: 4000
+request:
+  url: '{{base_url}}/auth/register'
+  method: POST
+  headers:
+    - key: Content-Type
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "firstName": "John",
+        "lastName": "Doe",
+        "email": "john.doe@example.com",
+        "password": "password123",
+        "role": "Admin"
+      }
+response:
+  statusCode: 400
+  statusText: Bad Request
+  headers:
+    - key: Content-Type
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "status": "error",
+        "message": "Invalid role"
+      }

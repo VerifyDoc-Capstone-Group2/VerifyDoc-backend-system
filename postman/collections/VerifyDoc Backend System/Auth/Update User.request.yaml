@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{base_url}}/users/me"
+method: PATCH
+body:
+  type: formdata
+  content:
+    - type: file
+      key: profilePicture
+      src:
+        - postman-cloud:///1f1add61-e869-48a0-b85e-31ac0fb61732
+      description: ""
+      disabled: false
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 4328298688344084
