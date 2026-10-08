@@ -227,3 +227,92 @@ export const getCredentialById = async (credentialId, user) => {
   // dedicated verification service, not private credential documents.
   throw new AppError("You are not authorized to access this credential", 403);
 };
+
+
+// Citizen wallet listing: summaries only, including Pending/Rejected/Revoked records.
+export const getCitizenCredentials = async (user, options = {}) => {
+  const userId = user?._id ?? user?.userId;
+  if (!mongoose.isValidObjectId(userId)) {
+    throw new AppError("Authentication required", 401);
+  }
+
+  const currentUser = await User.findById(userId);
+  if (!currentUser) {
+    throw new AppError("User not found", 404);
+  }
+  if (currentUser.accountStatus !== "Active") {
+    throw new AppError("User account is not active", 403);
+  }
+  if (currentUser.role !== "Citizen") {
+    throw new AppError("Only Citizens can access a Citizen wallet", 403);
+  }
+
+  if (!options || typeof options !== "object" || Array.isArray(options)) {
+    throw new AppError("Invalid wallet query options", 400);
+  }
+
+  const parsePositiveInteger = (value, fallback, name) => {
+    if (value === undefined) return fallback;
+    if (typeof value !== "number" && typeof value !== "string") {
+      throw new AppError(`Invalid ${name}`, 400);
+    }
+    const normalized = String(value);
+    if (!/^[1-9]\d*$/.test(normalized)) {
+      throw new AppError(`Invalid ${name}`, 400);
+    }
+    const parsed = Number(normalized);
+    if (!Number.isSafeInteger(parsed)) {
+      throw new AppError(`Invalid ${name}`, 400);
+    }
+    return parsed;
+  };
+
+  const page = parsePositiveInteger(options.page, 1, "page");
+  const limit = parsePositiveInteger(options.limit, 10, "limit");
+  if (limit > 50) {
+    throw new AppError("Wallet page limit cannot exceed 50", 400);
+  }
+  if ((page - 1) * limit > Number.MAX_SAFE_INTEGER) {
+    throw new AppError("Page is too large", 400);
+  }
+
+  const filter = { citizenId: currentUser._id };
+  if (options.verificationStatus !== undefined) {
+    if (!["Pending", "Verified", "Rejected"].includes(options.verificationStatus)) {
+      throw new AppError("Invalid verificationStatus filter", 400);
+    }
+    filter.verificationStatus = options.verificationStatus;
+  }
+  if (options.status !== undefined) {
+    if (!["Active", "Revoked"].includes(options.status)) {
+      throw new AppError("Invalid status filter", 400);
+    }
+    filter.status = options.status;
+  }
+  if (options.source !== undefined) {
+    if (!["Citizen", "Institution"].includes(options.source)) {
+      throw new AppError("Invalid source filter", 400);
+    }
+    filter.source = options.source;
+  }
+
+  const [total, credentials] = await Promise.all([
+    Credential.countDocuments(filter),
+    Credential.find(filter)
+      .select("credentialId issuerName credentialType title fieldOfStudy issueDate graduationYear source verificationStatus status createdAt updatedAt")
+      .sort({ createdAt: -1, _id: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean()
+  ]);
+
+  return {
+    credentials,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit)
+    }
+  };
+};
