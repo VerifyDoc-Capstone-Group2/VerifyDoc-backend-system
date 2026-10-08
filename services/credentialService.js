@@ -438,3 +438,30 @@ export const verifyCredential = async (credentialId, user) => {
   if (!verified) throw new AppError("Credential has already been reviewed or is no longer active", 409);
   return verified;
 };
+
+
+export const rejectCredential = async (credentialId, rejectionReason, user) => {
+  if (typeof credentialId !== "string" || !/^VDOC-CRED-[0-9]{8}$/.test(credentialId.trim())) throw new AppError("Invalid credential ID", 400);
+  if (typeof rejectionReason !== "string" || !rejectionReason.trim() || rejectionReason.trim().length > 1000) throw new AppError("A rejection reason of up to 1000 characters is required", 400);
+  const userId = user?._id ?? user?.userId;
+  if (!mongoose.isValidObjectId(userId)) throw new AppError("Authentication required", 401);
+  const currentUser = await User.findById(userId);
+  if (!currentUser) throw new AppError("User not found", 404);
+  if (currentUser.accountStatus !== "Active") throw new AppError("User account is not active", 403);
+  if (currentUser.role !== "Institution") throw new AppError("Institution access required", 403);
+  if (currentUser.membershipStatus !== "Active") throw new AppError("Institution membership is not active", 403);
+  const institution = await Institution.findOne({ institutionId: currentUser.institutionId });
+  if (!institution || institution.status !== "Active") throw new AppError("Institution is not active", 403);
+  const credential = await Credential.findOne({ credentialId: credentialId.trim() }).select("institution source verificationStatus status");
+  if (!credential) throw new AppError("Credential not found", 404);
+  if (!credential.institution?.equals(institution._id)) throw new AppError("You are not authorized to reject this credential", 403);
+  if (credential.source !== "Citizen") throw new AppError("Only Citizen uploads require review", 409);
+  if (credential.status !== "Active" || credential.verificationStatus !== "Pending") throw new AppError("Only active pending credentials can be rejected", 409);
+  const rejected = await Credential.findOneAndUpdate(
+    { _id: credential._id, institution: institution._id, source: "Citizen", status: "Active", verificationStatus: "Pending" },
+    { $set: { verificationStatus: "Rejected", rejectionReason: rejectionReason.trim() } },
+    { new: true, runValidators: true }
+  ).select("-document.publicId");
+  if (!rejected) throw new AppError("Credential has already been reviewed or is no longer active", 409);
+  return rejected;
+};
