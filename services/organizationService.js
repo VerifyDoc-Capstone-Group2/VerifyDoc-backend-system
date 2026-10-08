@@ -175,6 +175,7 @@ export const registerOrganization = async (data) => {
     // Sends the user information to createUser()
     const user = await createUser({
       ...data.user,
+      role: 'Organization',
       organizationId: organization.organizationId
     }, dbSession);
 
