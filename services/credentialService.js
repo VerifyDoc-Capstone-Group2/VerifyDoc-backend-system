@@ -385,3 +385,56 @@ export const getInstitutionCredentials = async (user, options = {}) => {
   ]);
   return { credentials, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
 };
+
+
+export const verifyCredential = async (credentialId, user) => {
+  if (typeof credentialId !== "string" || !/^VDOC-CRED-[0-9]{8}$/.test(credentialId.trim())) {
+    throw new AppError("Invalid credential ID", 400);
+  }
+  const userId = user?._id ?? user?.userId;
+  if (!mongoose.isValidObjectId(userId)) throw new AppError("Authentication required", 401);
+
+  const currentUser = await User.findById(userId);
+  if (!currentUser) throw new AppError("User not found", 404);
+  if (currentUser.accountStatus !== "Active") throw new AppError("User account is not active", 403);
+  if (currentUser.role !== "Institution") throw new AppError("Institution access required", 403);
+  if (currentUser.membershipStatus !== "Active") throw new AppError("Institution membership is not active", 403);
+
+  const institution = await Institution.findOne({ institutionId: currentUser.institutionId });
+  if (!institution || institution.status !== "Active") throw new AppError("Institution is not active", 403);
+
+  const credential = await Credential.findOne({ credentialId: credentialId.trim() })
+    .select("institution source verificationStatus status");
+  if (!credential) throw new AppError("Credential not found", 404);
+  if (!credential.institution?.equals(institution._id)) {
+    throw new AppError("You are not authorized to verify this credential", 403);
+  }
+  if (credential.source !== "Citizen") {
+    throw new AppError("Only Citizen-uploaded credentials require review", 409);
+  }
+  if (credential.status !== "Active" || credential.verificationStatus !== "Pending") {
+    throw new AppError("Only active, pending credentials can be verified", 409);
+  }
+
+  // Atomic conditional update prevents two reviewers from approving the same request.
+  const verified = await Credential.findOneAndUpdate(
+    {
+      _id: credential._id,
+      institution: institution._id,
+      source: "Citizen",
+      status: "Active",
+      verificationStatus: "Pending"
+    },
+    {
+      $set: {
+        verificationStatus: "Verified",
+        verifiedByInstitutionUserId: currentUser._id,
+        verifiedAt: new Date()
+      }
+    },
+    { new: true, runValidators: true }
+  ).select("-document.publicId");
+
+  if (!verified) throw new AppError("Credential has already been reviewed or is no longer active", 409);
+  return verified;
+};
