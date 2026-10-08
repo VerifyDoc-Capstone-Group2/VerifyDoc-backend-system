@@ -171,3 +171,59 @@ export const createCredential = async (credentialData, user) => {
     status: "Active"
   });
 };
+
+
+// Retrieve full credential details only for the wallet owner or associated issuer.
+// Public QR verification must use a separate, privacy-limited service.
+export const getCredentialById = async (credentialId, user) => {
+  if (typeof credentialId !== "string" || !/^VDOC-CRED-\d{8}$/.test(credentialId.trim())) {
+    throw new AppError("Invalid credential ID", 400);
+  }
+
+  const userId = user?._id ?? user?.userId;
+  if (!mongoose.isValidObjectId(userId)) {
+    throw new AppError("Authentication required", 401);
+  }
+
+  const currentUser = await User.findById(userId);
+  if (!currentUser) {
+    throw new AppError("User not found", 404);
+  }
+  if (currentUser.accountStatus !== "Active") {
+    throw new AppError("User account is not active", 403);
+  }
+
+  const credential = await Credential.findOne({
+    credentialId: credentialId.trim()
+  });
+  if (!credential) {
+    throw new AppError("Credential not found", 404);
+  }
+
+  if (currentUser.role === "Citizen") {
+    if (!credential.citizenId?.equals(currentUser._id)) {
+      throw new AppError("You are not authorized to access this credential", 403);
+    }
+    return credential;
+  }
+
+  if (currentUser.role === "Institution") {
+    if (currentUser.membershipStatus !== "Active") {
+      throw new AppError("Institution membership is not active", 403);
+    }
+    const existingInstitution = await Institution.findOne({
+      institutionId: currentUser.institutionId
+    });
+    if (!existingInstitution || existingInstitution.status !== "Active") {
+      throw new AppError("Institution is not active", 403);
+    }
+    if (!credential.institution?.equals(existingInstitution._id)) {
+      throw new AppError("You are not authorized to access this credential", 403);
+    }
+    return credential;
+  }
+
+  // Organizations will receive limited verification results through a
+  // dedicated verification service, not private credential documents.
+  throw new AppError("You are not authorized to access this credential", 403);
+};
