@@ -316,3 +316,72 @@ export const getCitizenCredentials = async (user, options = {}) => {
     }
   };
 };
+
+
+export const getInstitutionCredentials = async (user, options = {}) => {
+  const userId = user?._id ?? user?.userId;
+  if (!mongoose.isValidObjectId(userId)) throw new AppError("Authentication required", 401);
+  const currentUser = await User.findById(userId);
+  if (!currentUser) throw new AppError("User not found", 404);
+  if (currentUser.accountStatus !== "Active") throw new AppError("User account is not active", 403);
+  if (currentUser.role !== "Institution") throw new AppError("Institution access required", 403);
+  if (currentUser.membershipStatus !== "Active") throw new AppError("Institution membership is not active", 403);
+
+  const institution = await Institution.findOne({ institutionId: currentUser.institutionId });
+  if (!institution || institution.status !== "Active") throw new AppError("Institution is not active", 403);
+  if (!options || typeof options !== "object" || Array.isArray(options)) throw new AppError("Invalid options", 400);
+
+  const parsePageNumber = (value, fallback) => {
+    if (value === undefined) return fallback;
+    if (!["number", "string"].includes(typeof value) || !/^[1-9][0-9]*$/.test(String(value))) {
+      throw new AppError("Invalid pagination value", 400);
+    }
+    const parsed = Number(value);
+    if (!Number.isSafeInteger(parsed)) throw new AppError("Invalid pagination value", 400);
+    return parsed;
+  };
+  const page = parsePageNumber(options.page, 1);
+  const limit = parsePageNumber(options.limit, 10);
+  if (limit > 50) throw new AppError("Maximum page size is 50", 400);
+  const skip = (page - 1) * limit;
+  if (!Number.isSafeInteger(skip)) throw new AppError("Page is too large", 400);
+
+  const view = options.view ?? "all";
+  if (!["all", "issued", "uploaded", "pendingReview"].includes(view)) {
+    throw new AppError("Invalid view", 400);
+  }
+  const filter = { institution: institution._id };
+  if (view === "issued") filter.source = "Institution";
+  if (view === "uploaded" || view === "pendingReview") filter.source = "Citizen";
+  if (view === "pendingReview") {
+    filter.verificationStatus = "Pending";
+    filter.status = "Active";
+  }
+  if (options.verificationStatus !== undefined) {
+    if (!["Pending", "Verified", "Rejected"].includes(options.verificationStatus)) {
+      throw new AppError("Invalid verificationStatus", 400);
+    }
+    if (view === "pendingReview" && options.verificationStatus !== "Pending") {
+      throw new AppError("Conflicting verificationStatus filter", 400);
+    }
+    filter.verificationStatus = options.verificationStatus;
+  }
+  if (options.status !== undefined) {
+    if (!["Active", "Revoked"].includes(options.status)) throw new AppError("Invalid status", 400);
+    if (view === "pendingReview" && options.status !== "Active") {
+      throw new AppError("Conflicting status filter", 400);
+    }
+    filter.status = options.status;
+  }
+
+  const [total, credentials] = await Promise.all([
+    Credential.countDocuments(filter),
+    Credential.find(filter)
+      .select("credentialId citizenId issuerName credentialType title fieldOfStudy issueDate graduationYear source verificationStatus status createdAt updatedAt")
+      .sort({ createdAt: -1, _id: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean()
+  ]);
+  return { credentials, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
+};
