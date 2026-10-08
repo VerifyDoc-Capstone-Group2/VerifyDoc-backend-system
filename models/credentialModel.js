@@ -99,6 +99,8 @@ const credentialSchema = new mongoose.Schema(
       type: Date
     },
 
+    rejectionReason: { type: String, trim: true, maxlength: 1000 },
+
     revokedAt: {
       type: Date
     },
