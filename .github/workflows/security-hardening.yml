@@ -1,0 +1,28 @@
+name: Security hardening regression tests
+on:
+  push:
+    branches: [security/auth-error-hardening]
+  pull_request:
+    paths:
+      - 'middlewares/authMiddleware.js'
+      - 'middlewares/errorHandler.js'
+      - 'app.js'
+      - 'tests/credentials/securityHardening.unit.test.js'
+      - '.github/workflows/security-hardening.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  security-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Run security regression tests
+        run: npx vitest run --config vitest.unit.config.js tests/credentials/securityHardening.unit.test.js
