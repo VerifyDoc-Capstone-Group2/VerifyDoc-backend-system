@@ -16,5 +16,6 @@ const confirmationRequestSchema = new mongoose.Schema({
 confirmationRequestSchema.index({ institution: 1, status: 1, createdAt: -1 });
 confirmationRequestSchema.index({ organization: 1, createdAt: -1 });
 confirmationRequestSchema.index({ share: 1, status: 1 });
+confirmationRequestSchema.index({ share: 1 }, { unique: true, partialFilterExpression: { status: "Pending" } });
 
 export const ConfirmationRequest = mongoose.model("ConfirmationRequest", confirmationRequestSchema);
