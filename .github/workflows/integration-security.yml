@@ -1,0 +1,44 @@
+name: Integration and security tests
+on:
+  push:
+    branches: [test/integration-security]
+  pull_request:
+    paths:
+      - 'tests/integration/**'
+      - '.github/workflows/integration-security.yml'
+      - 'services/credentialShareService.js'
+      - 'services/freshConfirmationService.js'
+      - 'routes/credentialShareRoute.js'
+      - 'routes/freshConfirmationRoute.js'
+      - 'middlewares/authMiddleware.js'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_MONGODB_URI: mongodb://127.0.0.1:27017/verifydoc_test
+      JWT_SECRET: verifydoc-integration-tests-only-not-for-production
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Run integration and security tests
+        run: npx vitest run tests/integration/credentialSecurity.integration.test.js
