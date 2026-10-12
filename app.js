@@ -11,6 +11,7 @@ import freshConfirmationRoute from './routes/freshConfirmationRoute.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
 const app = express();
+app.disable('x-powered-by');
 
 const corsOptions = {
   origin: '*',
@@ -22,7 +23,7 @@ app.use(cors(corsOptions));
 
 app.options(/.*/, cors(corsOptions)); // Enable pre-flight for all routes
 
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
 
 app.use('/', userRoute);
 app.use('/', organizationRoute);
