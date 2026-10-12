@@ -6,6 +6,7 @@ import organizationRoute from './routes/organizationRoute.js';
 import institutionRoute from './routes/institutionRoute.js';
 import credentialVerificationRoute from './routes/credentialVerificationRoute.js';
 import credentialRoute from './routes/credentialRoute.js';
+import credentialShareRoute from './routes/credentialShareRoute.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
 const app = express();
@@ -28,6 +29,7 @@ app.use('/', institutionRoute);
 app.use('/', adminRoute);
 app.use('/', credentialVerificationRoute);
 app.use('/', credentialRoute);
+app.use('/', credentialShareRoute);
 
 app.get('/', (req, res) => {
   res.status(200).send('Server is running');
