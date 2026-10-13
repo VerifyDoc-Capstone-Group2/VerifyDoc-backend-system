@@ -24,12 +24,16 @@ export const getCredentialVerification = async (credentialId, token) => {
   }
 
   const credential = await Credential.findOne({ credentialId })
-    .select("credentialId issuerName credentialType title issueDate graduationYear source verificationStatus status revokedAt");
+    .select("credentialId citizenId issuerName credentialType title issueDate graduationYear source verificationStatus status revokedAt")
+    .populate("citizenId", "firstName lastName");
   if (!credential) throw new AppError("Credential not found", 404);
 
   const isValid = credential.status === "Active" && credential.verificationStatus === "Verified";
   return {
     credentialId: credential.credentialId,
+    holderName: credential.citizenId
+      ? [credential.citizenId.firstName, credential.citizenId.lastName].filter(Boolean).join(" ") || null
+      : null,
     issuerName: credential.issuerName,
     credentialType: credential.credentialType,
     title: credential.title,

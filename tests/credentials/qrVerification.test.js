@@ -21,7 +21,8 @@ describe("QR verification", () => {
 
   it("returns safe verified credential details", async () => {
     Credential.findOne.mockReturnValue({
-      select: vi.fn().mockResolvedValue({
+      select: vi.fn().mockReturnValue({
+        populate: vi.fn().mockResolvedValue({
         credentialId: "VDOC-CRED-12345678",
         issuerName: "Sample Institution",
         title: "Degree",
@@ -30,13 +31,16 @@ describe("QR verification", () => {
         verificationStatus: "Verified",
         status: "Active",
         source: "Institution",
-        document: { url: "private-url", publicId: "private-id" }
+        document: { url: "private-url", publicId: "private-id" },
+        citizenId: { firstName: "Ada", lastName: "Okafor" }
+        })
       })
     });
     const token = createVerificationToken("VDOC-CRED-12345678");
     const response = await request(app).get("/credentials/verify/VDOC-CRED-12345678").query({ token });
     expect(response.status).toBe(200);
     expect(response.body.data.isValid).toBe(true);
+    expect(response.body.data.holderName).toBe("Ada Okafor");
     expect(response.body.data).not.toHaveProperty("document");
     expect(response.body.data).not.toHaveProperty("citizenId");
   });
@@ -49,7 +53,8 @@ describe("QR verification", () => {
 
   it("reports revoked credentials as invalid", async () => {
     Credential.findOne.mockReturnValue({
-      select: vi.fn().mockResolvedValue({
+      select: vi.fn().mockReturnValue({
+        populate: vi.fn().mockResolvedValue({
         credentialId: "VDOC-CRED-12345678",
         issuerName: "Sample Institution",
         title: "Degree",
@@ -57,6 +62,7 @@ describe("QR verification", () => {
         verificationStatus: "Verified",
         status: "Revoked",
         revokedAt: new Date("2026-01-01")
+        })
       })
     });
     const token = createVerificationToken("VDOC-CRED-12345678");
@@ -64,5 +70,6 @@ describe("QR verification", () => {
     expect(response.status).toBe(200);
     expect(response.body.data.isValid).toBe(false);
     expect(response.body.data.status).toBe("Revoked");
+    expect(response.body.data.holderName).toBeNull();
   });
 });
