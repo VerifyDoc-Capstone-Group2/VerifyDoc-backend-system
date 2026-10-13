@@ -152,3 +152,12 @@ export const respondToFreshConfirmation = async (requestId, data, identity) => {
   // This response is a confirmation result, not a mutation of the issued credential.
   return visible(updated);
 };
+
+export const getOrganizationConfirmation = async (requestId, identity) => {
+  const user = await actor(identity, "Organization");
+  const organization = await organizationFor(user);
+  validId(requestId, "confirmation request ID");
+  const request = await ConfirmationRequest.findOne({ _id: requestId, organization: organization._id }).select(publicFields).lean();
+  if (!request) throw new AppError("Confirmation request not found", 404);
+  return visible(request);
+};
