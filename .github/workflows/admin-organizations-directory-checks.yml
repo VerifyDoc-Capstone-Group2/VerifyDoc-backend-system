@@ -1,0 +1,17 @@
+name: Admin entity directory checks
+on:
+  push:
+    branches: [integration/admin-organizations-directory]
+  pull_request:
+    branches: [main]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check routes/adminRoute.js
+      - run: node --check controllers/adminController.js
+      - run: node --check services/adminService.js
