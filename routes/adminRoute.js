@@ -1,5 +1,5 @@
 import express from 'express';
-import { approveInstitutionController, approveOrganizationController, rejectInstitutionController, rejectOrganizationController, pendingOrganizationsController, pendingInstitutionsController, approvalQueueController, getUsersController, getAdminDashboardController } from '../controllers/adminController.js';
+import { approveInstitutionController, approveOrganizationController, rejectInstitutionController, rejectOrganizationController, pendingOrganizationsController, pendingInstitutionsController, approvalQueueController, getUsersController, getAdminDashboardController, getAdminEntityDirectoryController } from '../controllers/adminController.js';
 import { authValidation, authorizeAdminRoles } from '../middlewares/authMiddleware.js';
 
 
@@ -64,5 +64,8 @@ router.get(
   getAdminDashboardController
 );
 
+
+// List all registered organizations and institutions for the admin directory.
+router.get('/admin/entities', authValidation(), authorizeAdminRoles(), getAdminEntityDirectoryController);
 
 export default router;

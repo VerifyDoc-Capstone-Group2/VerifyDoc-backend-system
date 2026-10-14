@@ -485,3 +485,43 @@ export const getAdminDashboard = async () => {
     pendingApprovals
   };
 };
+/**
+ * Admin directory of registered organizations and institutions.
+ * Return public administrative metadata only (never CAC/accreditation documents).
+ */
+export const getAdminEntityDirectory = async () => {
+  const [organizations, institutions] = await Promise.all([
+    Organization.find({}).select('organizationId organizationName organizationType status approvedAt createdAt').lean(),
+    Institution.find({}).select('institutionId institutionName institutionType status approvedAt createdAt').lean()
+  ]);
+
+  const entities = [
+    ...organizations.map(item => ({
+      id: item.organizationId,
+      entityKind: 'Organization',
+      name: item.organizationName,
+      type: item.organizationType,
+      status: item.status,
+      approvedAt: item.approvedAt || null,
+      createdAt: item.createdAt
+    })),
+    ...institutions.map(item => ({
+      id: item.institutionId,
+      entityKind: 'Institution',
+      name: item.institutionName,
+      type: item.institutionType,
+      status: item.status,
+      approvedAt: item.approvedAt || null,
+      createdAt: item.createdAt
+    }))
+  ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  return {
+    entities,
+    counts: {
+      all: entities.length,
+      organizations: organizations.length,
+      institutions: institutions.length
+    }
+  };
+};
