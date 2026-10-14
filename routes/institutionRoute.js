@@ -13,8 +13,7 @@ router.get('/institutions/search', async (req, res, next) => {
     if (q.length < 2 || q.length > 80) {
       return res.status(400).json({ message: 'Search must contain 2 to 80 characters' });
     }
-    const escaped = q.replace(/[.*+?^$\u007b\u007d()|[\]\\]/g, '\\// ====================================
-// POST');
+    const escaped = q.replace(/[^a-zA-Z0-9 ]/g, '\\$&');
     const institutions = await Institution.find({
       status: 'Active',
       institutionName: { $regex: escaped, $options: 'i' }
