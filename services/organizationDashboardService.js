@@ -44,6 +44,11 @@ export const getOrganizationDashboard = async (identity) => {
     }))
   ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
   return {
+    organization: {
+      organizationName: organization.organizationName,
+      organizationType: organization.organizationType,
+      status: organization.status
+    },
     sharedCredentials: activeShares,
     pendingRequests,
     completedRequests,
