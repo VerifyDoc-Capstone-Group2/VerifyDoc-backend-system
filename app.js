@@ -9,6 +9,7 @@ import credentialRoute from './routes/credentialRoute.js';
 import credentialShareRoute from './routes/credentialShareRoute.js';
 import freshConfirmationRoute from './routes/freshConfirmationRoute.js';
 import organizationDashboardRoute from './routes/organizationDashboardRoute.js';
+import citizenDashboardRoute from './routes/citizenDashboardRoute.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
 const app = express();
@@ -35,6 +36,7 @@ app.use('/', credentialRoute);
 app.use('/', credentialShareRoute);
 app.use('/', freshConfirmationRoute);
 app.use('/', organizationDashboardRoute);
+app.use('/', citizenDashboardRoute);
 
 app.get('/', (req, res) => {
   res.status(200).send('Server is running');
