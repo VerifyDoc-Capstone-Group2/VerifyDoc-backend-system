@@ -1,4 +1,4 @@
-import { approveInstitution, approveOrganization, getAdminDashboard, getApprovalQueue, getPendingInstitutions, getPendingOrganizations, getUsers, rejectInstitution, rejectOrganization } from "../services/adminService.js";
+import { approveInstitution, approveOrganization, getAdminDashboard, getApprovalQueue, getPendingInstitutions, getPendingOrganizations, getUsers, rejectInstitution, rejectOrganization, getAdminEntityDirectory } from "../services/adminService.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 
@@ -106,3 +106,10 @@ export const getAdminDashboardController = asyncHandler(
     });
   }
 );
+export const getAdminEntityDirectoryController = asyncHandler(async (req, res) => {
+  const directory = await getAdminEntityDirectory();
+  res.status(200).json({
+    message: 'Registered entities retrieved successfully',
+    data: directory
+  });
+});
