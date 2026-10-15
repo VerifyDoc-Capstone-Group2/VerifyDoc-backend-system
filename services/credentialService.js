@@ -383,7 +383,22 @@ export const getInstitutionCredentials = async (user, options = {}) => {
       .limit(limit)
       .lean()
   ]);
-  return { credentials, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
+  // Resolve holder names only for credentials belonging to this authenticated institution.
+  // Do not expose citizen emails or other private account fields.
+  const holderIds = [...new Set(credentials.map(item => String(item.citizenId)).filter(id => mongoose.isValidObjectId(id)))];
+  const holders = holderIds.length
+    ? await User.find({ _id: { $in: holderIds }, role: "Citizen" })
+        .select("_id firstName lastName").lean()
+    : [];
+  const holderNames = new Map(holders.map(holder => [
+    String(holder._id),
+    [holder.firstName, holder.lastName].filter(Boolean).join(" ").trim()
+  ]));
+  const summaries = credentials.map(({ citizenId, ...credential }) => ({
+    ...credential,
+    holderName: holderNames.get(String(citizenId)) || "Unavailable"
+  }));
+  return { credentials: summaries, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
 };
 
 
