@@ -25,9 +25,9 @@ router.get("/credentials/recipients/search", ...authenticate, async (req, res, n
     if (q.length < 3 || q.length > 100) {
       return res.status(400).json({ message: "Enter 3 to 100 characters to search citizen emails" });
     }
-    const escaped = q.replace(/[^a-z0-9@._+-]/g, "");
+    const escaped = q.replace(/[^a-z0-9@._+-]/g, "").replace(/\./g, "[.]").replace(/\+/g, "[+]").replace(/-/g, "[-]");
     const citizens = await User.find({
-      role: "Citizen", accountStatus: "Active", email: { $regex: "^" + escaped.replace(/[. +?*^$(){}|[\]\\]/g, "\\// Exact-email recipient lookup; restricted to active institution members."), $options: "i" }
+      role: "Citizen", accountStatus: "Active", email: { $regex: "^" + escaped, $options: "i" }
     }).select("_id firstName lastName email").sort({ email: 1 }).limit(8).lean();
     return res.json({
       message: "Citizen suggestions retrieved",
