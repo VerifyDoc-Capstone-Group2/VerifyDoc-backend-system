@@ -1,10 +1,27 @@
 import express from 'express';
+import { User } from '../models/userModel.js';
+import { authValidation, requireActiveAccount } from '../middlewares/authMiddleware.js';
 import { Institution } from '../models/institutionModel.js';
 import { registerInstitutionController } from '../controllers/institutionController.js';
 import { uploadDocument, uploadRegistrationFiles } from '../middlewares/uploadMiddleware.js';
 import { parseFormData } from '../middlewares/parseFormData.js';
 
 const router = express.Router();
+
+// Authenticated institution identity for dashboard branding.
+router.get('/institutions/me', authValidation(), requireActiveAccount(), async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user?._id ?? req.user?.userId)
+      .select('role institutionId').lean();
+    if (!user || user.role !== 'Institution' || !user.institutionId) {
+      return res.status(403).json({ message: 'Institution account required' });
+    }
+    const institution = await Institution.findOne({ institutionId: user.institutionId })
+      .select('institutionId institutionName institutionType status').lean();
+    if (!institution) return res.status(404).json({ message: 'Institution not found' });
+    return res.json({ message: 'Institution retrieved', data: institution });
+  } catch (error) { next(error); }
+});
 
 // Public directory: only approved institutions, and only non-sensitive fields.
 router.get('/institutions/search', async (req, res, next) => {
